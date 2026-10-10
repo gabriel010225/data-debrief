@@ -118,6 +118,15 @@ button.tag:hover{color:var(--ink);border-color:var(--muted)}
 figure{margin:0;padding:18px;border-radius:12px;background:var(--bg);overflow-x:auto}
 figure figcaption{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
 .fig-svg{display:block;width:100%;min-width:560px;height:auto}
+.series{border:1px solid var(--line);border-radius:10px;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.series ol,.series-card ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.series button,.series-card button{all:unset;cursor:pointer;color:var(--accent)}
+.series button:hover,.series-card button:hover{text-decoration:underline}
+.series-card{cursor:default}
+.series-card li{white-space:normal;overflow:visible}
+.series-card li::before{content:none}
+.series-card ol{list-style:decimal}
+.series button,.series-card button{vertical-align:top}
 .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
 .related{display:flex;flex-direction:column}
 .related button{all:unset;cursor:pointer;display:flex;gap:12px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line)}
@@ -319,6 +328,210 @@ Data cleaning is never just a technical optimization. It is an act of business m
 💬 How do you handle these conflicting business rules between different departments during your ingestion phases? Let's discuss in the comments!
 #DataEngineering #DataQuality #SAP #SQL #DataGovernance #SupplyChain #AnalyticsEngineering`}
 ];
+const POSTS2 = [
+{id:"7475435043721568256",date:"2026-06-24",olang:"fr",text:`💡 L'illusion du Déclaratif : Quand la sur-abstraction crée une boîte noire
+Le modèle Déclarative Pipeline est magique sur le papier : définir le QUOI (transférer une table BigQuery vers un bucket GCS en 3 lignes de config) et laisser la plateforme gérer le COMMENT.
+Mais quand l’abstraction confisque le contrôle, le rêve tourne au cauchemar. C'est l'histoire d'un pipeline hyper simple qui se solde par un festival de caractères français (€, é, à) complètement brisés en sortie. 📉
+Le problème ? BigQuery est nativement en UTF-8, donc impossible de spécifier l'encodage. Le coupable ? Probablement un traitement intermédiaire (type Dataproc/Spark) masqué par notre framework interne qui réencode les données sous le capot. Impossible de trouver la moindre config d' encoding dans la doc ou via le support.
+Mon post-mortem sur ce genre d'architecture :
+1️⃣ La perte d'explicité : Moins on écrit de lignes de code, moins on a de contrôle en cas d'effet de bord. Un bon framework doit abstraire la tuyauterie, pas confisquer les clés de configuration de base.
+2️⃣ Le debugging à l'aveugle : Quand un script impératif plante, la stack trace est claire. Quand le déclaratif échoue à cause d'un paramètre système invisible, on en est réduit aux suppositions.
+Le déclaratif excelle pour le standard, mais il ne doit pas standardiser nos angles morts. 🛠️
+Et vous, quel est le paramètre le plus "simple" qui vous a coûté le plus de temps ? 😉
+#DataEngineering #GoogleCloud #BigQuery #ApacheSpark #GitOps #DataQuality`},
+{id:"7472898370634747905",date:"2026-06-17",olang:"fr",text:`💡 GitOps & Déclaratif : Le rêve de l'automatisation, le cauchemar de la boîte noire ?
+Pousser le modèle déclaratif à son paroxysme mène naturellement au GitOps : un dépôt Git devient l'unique source de vérité où un simple fichier YAML synchronise automatiquement l'infrastructure (Airflow, Kubernetes, dbt). Plus de scripts manuels, plus de dérive de configuration.
+Mais dans la réalité, ce modèle standardisé via un Framework Interne cache un coût majeur : la perte de visibilité syntaxique. 📉
+En voulant trop abstraire la complexité pour l'utilisateur, on crée des usines à gaz :
+❌ La boîte noire des configurations : La syntaxe perd toute son explicité. On peut passer des heures à chercher un paramètre de base (comme un simple encoding ou timezone) masqué sous le capot du framework.
+❌ Un debugging abstrait : Quand un script Python plante, la stack trace est claire. Quand le déclaratif échoue, le bug vient souvent de l'interpréteur de la plateforme, rendant le diagnostic frustrant.
+❌ La rigidité face aux cas particuliers : Le déclaratif excelle sur le standard. Dès qu'un flux nécessite une logique conditionnelle complexe, le fichier de configuration devient illisible.
+Moins de code ne signifie pas moins de complexité : elle est simplement déplacée vers la plateforme. Le défi est de trouver le bon curseur entre l'automatisation GitOps et une expérience développeur transparente, sans transformer le quotidien en un blind-test de configuration.
+Et vous, vos frameworks internes sont-ils des accélérateurs ou des boîtes noires ? 👁️
+#DataEngineering #GitOps #DevOps #CloudArchitecture #YAML`},
+{id:"7470361716858650625",date:"2026-06-10",olang:"fr",text:`💡 Pourquoi le "Declarative Pipeline" est en train de redéfinir la Data ?
+Si vous observez la tendance actuelle vers des architectures de plus en plus basées sur la configuration (le "low-code" technique), un mot d'ordre revient en boucle : Declarative.
+En tant que professionnels de la data, nous délaissons de plus en plus l'approche Impérative (écrire des scripts complexes pour dicter au système COMMENT faire) au profit de l'approche Déclarative : on décrit le QUOI (la structure cible, la requête SQL, les dépendances), et la plateforme gère l'exécution sous le capot.
+📊 La réalité du marché : l'indétrônable Airflow
+Le géant Airflow : Il reste le leader incontesté et le standard de l'industrie grâce à sa flexibilité immense.
+Les alternatives modernes : Des outils plus récents comme Kestra séduisent en faisant du déclaratif natif (YAML) leur cœur de métier pour simplifier la lisibilité.
+🔄 Le meilleur des deux mondes : les Frameworks internes
+La réalité du terrain n'est pas si binaire. Beaucoup d'entreprises ne choisissent pas et créent des frameworks internes par-dessus Airflow.
+L'utilisateur déclare ses schémas et ses dépendances dans des fichiers de configuration standardisés (YAML/JSON). Après validation via la CI/CD, c'est Airflow qui pilote en arrière-plan des infrastructures de calcul élastiques (comme Dataproc ou Kubernetes).
+Et vous, votre stack penche plutôt du côté impératif ou déclaratif ?
+#DataEngineering #DataOps #Airflow #Kestra #CloudData #BusinessIntelligence`},
+{id:"7467824929464516608",date:"2026-06-03",olang:"fr",text:`💡 Data vs Trésorerie : ce que vos données de Supply Chain cachent réellement.
+Dans la BI et la Supply Chain, il existe un cas d'école classique : à chaque fin de mois — surtout au 30 juin et au 31 décembre — la réception des marchandises s'effondre mystérieusement dans les rapports, avant d'exploser le 2 du mois suivant.
+Bug de pipeline ? ❌ Aucunement.
+C'est une décision purement financière et de trésorerie (Cash Flow) : reporter de quelques jours la validation des livraisons permet de ne pas gonfler les stocks au bilan juste avant la clôture (window dressing). Surtout, cela décale le point de départ de la facturation et préserve les liquidités au moment où tous les yeux (actionnaires, marchés) sont rivés sur le cash disponible.
+Pour un Data / Cloud Engineer, cela rappelle trois règles d'or :
+1️⃣ Le contexte métier est roi : Sans cette grille de lecture, vos modèles de prévision s'appuieront sur des anomalies humaines et non sur des réalités opérationnelles.
+2️⃣ La distorsion des métriques : Un Lead Time qui s'allonge en fin de semestre n'est pas le signe d'un fournisseur défaillant, mais d'un camion qui attend aux portes de l'entrepôt pour des raisons comptables.
+3️⃣ L'alignement Data / BFR : Les choix financiers impactent directement la donnée brute. L'ingénieur doit comprendre la stratégie business pour concevoir des architectures pertinentes.
+Bâtir une pipeline ou un dashboard est indispensable, mais comprendre la logique financière qui pilote le business l'est encore plus. 📊✨
+#DataEngineering #SupplyChain #FinOps #CashFlow #Logistiques`},
+{id:"7465288302364131329",date:"2026-05-27",olang:"fr",text:`🕵️‍♂️Pourquoi un Data Engineer doit TOUJOURS être curieux (et ne pas juste déplacer des données)
+Il m'est arrivé de travailler sur un projet d'analyse des stocks via SAP. Sur le papier, une mission simple. En réalité, une vraie enquête d’audit.
+En inspectant les tables du Data Lake, j'ai repéré une colonne "Date" qui n'était pourtant pas demandée par le client. Par pure curiosité technique, j'ai voulu creuser. Grand bien m'en a pris, car ce simple réflexe a déterré trois loups majeurs :
+1️⃣ Le piège du "0" fantôme
+Quand un produit passait de 200 unités à 0, le système n'enregistrait aucune ligne à "0", il arrêtait juste de mettre à jour la ligne. Sans reconstruction des snapshots, le dashboard aurait affiché un stock fantôme de 200 à l'infini.
+2️⃣ L'absence d'unités de mesure (UoM)
+La table mixait des volumes bruts sans préciser les unités. Sommer des vis (à l'unité), des liquides (en litres) et des matières premières (en tonnes) de cette façon aurait totalement faussé les indicateurs.
+3️⃣ L'oubli de la sous-traitance
+Une partie stratégique des stocks était stockée chez des partenaires externes. Ces flux n'étaient pas capturés par le pipe actuel du Data Lake, amputant une grosse partie de la réalité terrain.
+💡 Notre rôle ne s’arrête pas au pipe ETL. Si je m’étais contenté de suivre la demande sans cette curiosité technique sur la colonne Date, nous aurions livré un outil techniquement propre, mais business-ment faux.
+Ne croyez jamais les données sur parole, allez toujours creuser les règles métier derrière !
+#DataEngineering #SAP #DataQuality #BusinessIntelligence #DataLake`},
+{id:"7462751548490682368",date:"2026-05-20",olang:"fr",text:`🚀 Objectifs vs Réel (Phase 3) : L’Alignement — Modéliser selon la réalité business
+Après le format (Phase 1) et la granularité (Phase 2), place à l'étape cruciale : l'affichage final. Un dashboard ne traduit pas juste des chiffres, il traduit une intention business.
+Avant de coder votre jointure dans BigQuery ou Looker, la question essentielle à poser aux stakeholders est : « Ce dashboard est-il un outil d'optimisation opérationnelle ou de pilotage stratégique ? »
+La réponse dicte directement la logique SQL à adopter :
+Scenario A : Le dashboard d'Exécution Active (LEFT JOIN)
+🎯 Objectif : Analyser la performance de ce qui est "live" (produits actifs, régions ouvertes).
+🛠 Logique : Un LEFT JOIN (Actuals ➡️ Targets).
+💼 Conséquence : Un produit prévu au budget mais dont le lancement est retardé (Ventes = 0) n'apparaîtra pas. Le focus reste 100 % dirigé sur l'optimisation des opérations en cours.
+Scenario B : Le dashboard d'Anticipation Stratégique (FULL OUTER JOIN)
+🎯 Objectif : Identifier les opportunités manquées et les retards de roadmap.
+🛠 Logique : Un FULL OUTER JOIN.
+💼 Conséquence : Le produit bloqué en développement devient une alerte rouge massive (Objectif = 100k€, Réel = 0). Ce manque de données devient une information actionnable pour la direction.
+En résumé : Il n'y a pas de mauvaise jointure, il n'y a que des contresens business. Choisir le mauvais type de jointure, c'est soit masquer des échecs de lancement critiques, soit polluer la vue des équipes opérationnelles. Alignez-vous d'abord, codez ensuite.
+Et vous, vos dashboards sont plutôt branchés exécution ou stratégie ? 👇
+#DataEngineering #SQL #BigQuery #Looker #BusinessIntelligence #Analytics`},
+{id:"7460214839194374144",date:"2026-05-13",olang:"fr",text:`🚀 GCP Architecture : Optimiser la gouvernance et le pilotage FinOps
+Une structuration rigoureuse des projets est essentielle pour assurer la transparence des coûts. Une approche robuste consiste à isoler le stockage du calcul :
+✅ Datalake Centralisé vs Projets de Facturation Décentralisés : Regrouper les données dans un projet de stockage unique (Datalake), tout en rattachant le calcul à des projets de facturation par département (ex: Marketing, R&D) permet :
+Pilotage FinOps précis : Chaque département paie ses propres requêtes, facilitant la refacturation (re-charge).
+Gouvernance simplifiée : Centralisation de la donnée mais consommation distribuée et traçable.
+✅ La hiérarchie DEV, INT, OPE : Pourquoi l'INT est cruciale ? Passer directement du DEV à l'OPE est un risque majeur. L'environnement d'Intégration (INT) est indispensable car :
+Validation de bout en bout : C'est le seul endroit où l'on teste les pipelines avec des volumes et des connecteurs réels (similaires à l'OPE) sans risque de corruption de la production.
+Fiabilité du déploiement : L'INT valide que les scripts d'Infrastructure as Code (IaC) fonctionnent parfaitement avant le "go-live".
+En résumé : Séparer le stockage du calcul et maintenir un environnement de staging (INT) garantit une plateforme cloud à la fois saine financièrement et techniquement stable.
+#GoogleCloud #GCP #CloudArchitecture #FinOps #DataEngineering #DevOps #BigQuery`},
+{id:"7457678121765560320",date:"2026-05-06",olang:"fr",text:`🚀 Objectifs vs Réel (Phase 2) : ne laissez pas vos jointures fausser vos KPIs.
+Réconcilier Objectifs (Targets) et Résultats (Actuals) est un défi technique dans la modélisation de données. Voici comment gérer les deux obstacles principaux :
+1️⃣ Wide vs Long : le défi du format. Les budgets peuvent arriver en colonnes (12 mois).
+Pour les traiter : 💡 L’approche UNPIVOT : Transformez vos colonnes mensuelles en lignes pour les aligner sur la dimension temporelle de vos données réelles.
+2️⃣ Le "Fan-Out Effect" : le piège de la granularité. Si vos ventes sont quotidiennes et vos cibles mensuelles, la jointure va dupliquer vos cibles.
+🛠 Option SQL : Utiliser ROW_NUMBER() pour n'attribuer la valeur qu'à la première ligne du mois. Risqué et complexe à maintenir.
+✨ Option BI (Looker) : Utiliser les Symmetric Aggregates. La plateforme gère automatiquement le dédoublonnage via les clés primaires. C'est la solution la plus robuste.
+📊 En résumé : Anticiper la consommation finale de la donnée est aussi important que de savoir l'extraire.
+#DataEngineering #DataAnalytics #SQL #Looker #ModernDataStack #BusinessIntelligence`},
+{id:"7455496222523535360",date:"2026-04-30",olang:"fr",text:`Orchestration Data : Pourquoi séparer le "Cerveau" des "Bras" ? 🧠💪
+En Data Engineering, on parle souvent d'orchestration sans toujours en définir la frontière. Pourtant, c'est là que se joue la stabilité d'une plateforme.
+L'orchestrateur est le Chef d'Orchestre : il définit le quand, le comment et l'ordre des tâches, mais il ne devrait pas (toujours) jouer de l'instrument lui-même.
+Dans ma pratique, j’observe deux paradigmes majeurs :
+🔹 Modèle Tout‑en‑un (ex. Kestra sur VM / Local) : L’orchestrateur est à la fois le cerveau et le bras : il déclenche ET exécute.
+✅ Idéal pour : Projets agiles, volumes modérés, mise en place rapide sans infra complexe.
+⚠️ Le risque : La "Resource Contention". Si un script Python sature la RAM de la VM, c'est tout l'orchestrateur qui tombe. Moins de scalabilité pour du Big Data.
+🔹 Modèle Découplé (ex. Airflow + Dataproc / Kubernetes) : L'orchestrateur délègue le calcul lourd à un moteur distribué (Spark/Presto).
+✅ Idéal pour : Environnements industriels exigeants. C'est le socle pour gérer des pipelines PySpark complexes.
+✅ Avantages : Scalabilité infinie, isolation des pannes et gouvernance fine de la donnée.
+⚠️ Le défi : Complexité opérationnelle accrue (gestion de l'infra éphémère) et logs souvent dispersés.
+👉 En résumé : Le choix n'est pas binaire, il dépend de votre maturité :
+Kestra/Prefect pour la vélocité et la centralisation.
+Airflow + Dataproc/Snowflake pour la robustesse et la puissance de calcul distribuée.
+#DataEngineering #Orchestration #Airflow #Dataproc #Kestra #BigData #DataArchitecture #GCP`},
+{id:"7452959586988412928",date:"2026-04-23",olang:"fr",text:`🔴 Pourquoi le "Actuals vs Targets" finit toujours par casser ?
+Comparer vos réalisations à vos objectifs, ça semble être la base du métier. Pourtant, c'est l'un des scénarios les plus fréquents et, paradoxalement, l'un des plus difficiles à stabiliser en production.
+Pourquoi ? Parce qu'on confronte deux mondes qui ne se parlent pas.
+D'un côté, les Actuals (propres, structurés, nichés dans le CRM). De l'autre, les Targets... nées dans un Excel ou un SharePoint, modifiées en douce un vendredi soir sans prévenir personne.
+Le premier défi, c’est de dompter ce chaos humain avant qu’il ne corrompe vos dashboards.
+💡 Le "Takeaway" technique à retenir :
+Pour éviter que vos chiffres ne changent "mystérieusement" d'un mois à l'autre, ne vous contentez pas de charger les données. Implémentez un "Versioning Safety Net" :
+- Pour les cibles statiques : Utilisez dbt seed pour versionner vos CSV directement dans Git.
+- Pour le "Time Travel" : Automatisez un Snapshot régulier. Cela permet de prouver qu'à l'instant T, l'objectif était bien de X, même si le fichier source a été écrasé depuis.
+C’est le cœur de la première partie de mon blog : Phase 1 - Ingesting the Chaos.
+Au programme de l'article complet :
+✅ Build de Data Quality checks pour détecter l'effondrement d'une structure Excel.
+✅ Orchestration Airflow vs intégrations Cloud-native.
+Fini les sueurs froides lors des audits ! 🛑
+#DataEngineering #ModernDataStack #dbt #BigQuery #Analytics #DataGovernance #BestPractices`},
+{id:"7450785147924312064",date:"2026-04-17",olang:"fr",text:`💡 Environnements, accès et gouvernance des données : quelques constats du terrain
+En théorie, les bonnes pratiques sont assez claires : séparer proprement les environnements dev et prod, avec des accès distincts, pour garantir la qualité des données et la sécurité.
+En pratique, ce n’est pas toujours si simple.
+Dans certains contextes, pour des raisons d’accès — souvent le cas dans les grands comptes où la gouvernance est extrêmement silotée et la granularité des accès très fine — cette séparation ne pouvait pas être appliquée de manière totalement idéale.
+Par exemple, au niveau des données brutes, seuls les accès à l’environnement de production étaient disponibles. Le code pouvait être identique et l’orchestration bien définie, mais les droits ne permettaient pas de reproduire exactement le même périmètre de données entre les environnements.
+Un autre sujet lié concernait le choix du bon environnement pour publier un dashboard. Là encore, la question n’était pas seulement technique : où les données sont-elles réellement accessibles, qui peut voir quoi, et quelle source de vérité doit être exposée ?
+Ces situations m’ont rappelé une chose essentielle : 👉 la data governance ne se joue pas uniquement dans le modèle ou le code, mais aussi — et surtout — dans la gestion des accès et des environnements.
+Plutôt que de viser une abstraction parfaite, il est souvent plus sain de reconnaître les contraintes existantes, de rendre les choix explicites et de les refléter clairement dans la configuration et la documentation.
+Ce n’est pas toujours la solution la plus élégante sur le papier, mais c’est souvent celle qui évite les malentendus, aujourd’hui comme demain.
+#DataEngineering #DataGovernance #AnalyticsEngineering #CloudSecurity #GrandsComptes #Pragmatisme #Consulting`},
+{id:"7449697987615920128",date:"2026-04-14",olang:"en",text:`[Part 3] Deconstructing the Uber ETL Pipeline on GCP 🚖💻
+In the final part of my review of this GCP Data Engineering project (based on the Uber TLC dataset), I’m shifting the focus from technical execution to Business Logic and Data Governance.
+Building a pipeline is a technical milestone; ensuring that the resulting Dashboard actually speaks a unified language across the company is a strategic one.
+📊 Dashboard Anatomy: From Raw Data to Decision Support
+The dashboard in this project (built with Looker Studio) follows a classic, effective hierarchy:
+The Control Layer: Filters for Vendor and Rate Codes. This is where the Star Schema we discussed in Part 2 pays off, enabling seamless slicing of millions of rows.
+The Pulse: High-level KPIs like Total Revenue ($1.5M) and Average Trip Distance.
+The Heatmap: A geospatial view providing an immediate "gut check" on where the demand is concentrated.
+🔍 The Consultant’s Critique: The "Total Revenue" Paradox
+Looking at this through the lens of a Data Consultant, the most critical challenge isn't the visualization itself, but the definition of the metrics.
+1. The "Definition War": Gross vs. Net Revenue. In large-scale industrial or service environments, Total_Revenue is often a source of truth... and a source of conflict. Finance sees Gross Revenue (Total collected). Operations needs Net Revenue (Stripping out tolls, taxes, and surcharges) to measure actual performance. Marketing might ignore surcharges but focus on the base fare.
+If different departments look at the same "Total Revenue" card with different mental formulas, the dashboard becomes a source of confusion rather than a tool for alignment.
+2. The Solution: Transparency through Metadata. Embedded Definitions: Using information tooltips (i) to explicitly state the formula. Dynamic Switchers: Allowing users to toggle between Gross and Net views depending on their departmental needs.
+3. Beyond the "History Book". To move from "reporting what happened" to "predicting what's next," adding Time Intelligence (Period-over-Period trends) is essential. Business is fluid; our dashboards must reflect that agility.
+💡 Final Thought: Data Engineering isn't just about moving bytes from A to B. Our job is to build a Refinery. We must ensure that what reaches the end-user is high-octane fuel for decisions, not raw, ambiguous sludge.
+In your experience, what is the one KPI that always causes the most debate in your leadership meetings? Let’s discuss below! 👇
+#GCP #DataEngineering #BigQuery #DataStrategy #AnalyticsEngineer #ModernDataStack #BusinessIntelligence`},
+{id:"7447161373740048384",date:"2026-04-07",olang:"en",text:`[Part 2] Deconstructing the Uber ETL Pipeline on GCP 🚖💻
+In my last post, I covered the pipeline architecture. Today, I want to talk about the Data Modeling part of this Uber project.
+Why bother decomposing a wide raw table into Fact and Dimension tables?
+1️⃣ Efficiency at Scale: The project isolates core metrics (Fare, Distance, Tips) into a central Fact Table, linked to descriptive Dimensions (Datetime, Location, Rate Code). This reduces redundancy and keeps your warehouse organized.
+2️⃣ The "Perfect Match" for Looker's Semantic Layer: A clean Star Schema is the best friend of Looker (LookML). Simpler Joins: It avoids fan-out issues and makes Looker’s symmetric aggregates work perfectly. Leaner LookML: By handling logic upstream in BigQuery, your LookML stays clean and maintainable. Performance: It minimizes heavy-lifting during query time, ensuring dashboards load in seconds.
+3️⃣ Financial Industry Takeaway: Beyond Taxi Data 💳 The way this project handles Rate Codes (Standard, JFK, Negotiated) is a masterclass in Billing Engine design. In Fintech, this is the way to model complex Interchange Fees or Multi-party Split logic. Separating "Transaction Metrics" from "Pricing Rules" ensures Data Consistency and Auditability—the two pillars of any reconciliation system.
+The Takeaway: Great Analytics Engineering is about moving complexity upstream. A solid model means a faster, more reliable experience for the end-user.
+#DataEngineering #GoogleCloud #MageAI #BigQuery #AnalyticsEngineering #GCP #LearningInPublic`},
+{id:"7444624664456318976",date:"2026-03-31",olang:"en",text:`[Part 1] Deconstructing the Uber ETL Pipeline on GCP 🚖💻
+Inspired by a recent tech atelier on script modularization, I’ve been deconstructing this Uber ETL project on GCP. It perfectly illustrates how to move from "Spaghetti scripts" to a maintainable architecture.
+The Pipeline Flow:
+1️⃣ Data Lake (GCS): Raw NYC taxi data is ingested for persistence and auditability.
+2️⃣ Orchestration (Mage AI): Running on a GCP VM, it manages the end-to-end flow.
+3️⃣ Warehouse (BigQuery): Cleaned data is loaded into Fact & Dimension tables for Looker Studio analytics.
+The Magic of Mage AI (Modular Logic): Unlike monolithic scripts, Mage enforces a block-level architecture:
+- Data Loaders: Purely for ingestion (SQL/Python).
+- Transformers: Where the business logic lives—decoupled and reusable.
+- Data Exporters: Handling the push to BigQuery.
+- Built-in Tests: Validating schema and data quality within each block.
+My Experience: Using Mage’s interactive UI for debugging is a game-changer. The immediate feedback at the block level makes isolating errors faster than traditional CLI methods.
+⚠️ Scaling Note: Perfect for medium-sized datasets; for massive enterprise traffic, the infrastructure might need more distributed scaling.
+#DataEngineering #GoogleCloud #MageAI #BigQuery #AnalyticsEngineering #GCP #LearningInPublic`},
+{id:"7441762454910595072",date:"2026-03-23",olang:"en",text:`For many data professionals, comparing real-time performance against set goals is a bread-and-butter task. It’s one of the most common requests we receive, and on the surface, it seems like a straightforward subtraction.
+However, as many of us have experienced, the devil is in the details. What looks simple in a spreadsheet can quickly turn into a maintenance nightmare in a production pipeline—from untraceable target changes to the subtle traps of data alignment.
+In my latest article, I’ve tried to map out the general framework for handling this end-to-end. Rather than just a technical "how-to," I’ve focused on the logical pulse of the process and the common "blind spots" where things often go sideways.
+Whether it’s about ensuring data traceability during ingestion or maintaining a single source of truth in the semantic layer, there’s a lot more to this "simple" task than meets the eye.
+I’d love to hear your thoughts on the best practices for bridging this gap.
+#DataEngineering #AnalyticsEngineering #ModernDataStack #DataGovernance #Looker #dbt #BigQuery`},
+{id:"7437741724082434048",date:"2026-03-12",olang:"en",text:`"Wait, which Looker should we use?" 🤔
+I get asked this question frequently. While they share a name, Looker and Looker Studio are fundamentally different tools built for different business needs.
+I just published a new piece on Medium where I break down the real-world trade-offs:
+✅ Looker: The Architect of governance, drill-downs, and the "Single Source of Truth."
+🎨 Looker Studio: The Painter of agile marketing dashboards (GA4/Google Ads/Sheets) and visual flexibility.
+From semantic layers to permission management and the frustration of "data islands," here is my take on navigating the data practitioner's odyssey.
+#DataAnalytics #BusinessIntelligence #Looker #DataGovernance #GoogleCloud #DataVisualization #TechCareer`},
+{id:"7434149629199282177",date:"2026-03-02",olang:"en",text:`"As-tu fait la recette (data reconciliation)?" — The one question every Data pro hears daily, yet the one skill they never teach you in school. We’re trained on fancy tools and high-level theory, while the real job often boils down to the "detective work" of reconciling messy exports, sync delays, and inconsistent business logic.
+I’ve put together a guide to fill this gap, introducing some general approaches of "recette". How do you survive the recette phase? If you have your own methods for reaching a 100% match, I’d love to hear them in the comments! 🚀
+#DataAnalytics #BusinessIntelligence #RecetteData #DataQuality #AnalyticsEngineering`},
+{id:"7429985750319915008",date:"2026-02-18",olang:"en",text:`Many BI developers live in a state of "perpetual firefighting"—broken SQL, redundant logic, and those cryptic technical column names that keep us up at night.
+In my latest article, I share how switching to Looker helped me reach "Data Zen." It’s not just a new tool; it’s a shift from worrying about how to transform data to declaring what the data actually is.
+#DataDeveloper #DataAnalytics #SemanticLayer #Looker #BusinessIntelligence`},
+{id:"7426535365651361794",date:"2026-02-09",olang:"en",text:`A robust backend is only half the battle; the true test of a data stack is how it empowers the person using it.
+Building on my previous article about Looker's underlying logic, I’m diving into the User-Facing features that make it a leader in the space. I’m talking about granular filter control, transparent drill-throughs, and moving away from "Excel Chaos" toward a Single Source of Truth.
+#DataGovernance #Looker #Analytics #SelfServiceBI`},
+{id:"7424003613808648192",date:"2026-02-02",olang:"en",text:`Ever feel like you’re spending more time fixing dashboards than actually analyzing them?
+We’ve all been there:
+Tired of manually updating the same metric across ten different reports?
+Stuck in endless meetings debating "whose number is right" instead of what the data actually means?
+Frustrated when a simple ad-hoc question requires a developer to rebuild a whole dashboard?
+These aren't just minor inconveniences—they are signs of a "Maintenance Trap."
+In my latest article, I move Beyond Dashboards to explore the underlying logic of Looker. I break down how a centralized Semantic Layer can help you move past these legacy headaches and build a system that actually scales.
+If you’re looking for a way to make your data stack more reliable and your analysis more flexible, this deep dive may give you some reflections.
+#Looker #BusinessIntelligence #DataGovernance #DataEngineering #DataArchitecture`},
+{id:"7422030713971191809",date:"2026-01-27",olang:"en",text:`In my journey of working with data, I’ve often felt that the bigger challenge isn’t the scale, but the consistency. 🚀
+Sharing my first article on Medium! I dive into how the Looker Semantic Layer helps solve "logic fragmentation" and serves as a foundation for scalable Data Governance.
+Would love to hear your thoughts on building a Single Source of Truth!
+#DataGovernance #Looker #Analytics #DataExperience`}
+];
+
 const DOMAINS = [
   {id:"semantic", color:"#0B7A84",
     name:{en:"Semantic layer & BI",zh:"语义层与 BI",fr:"Couche sémantique & BI"},
@@ -572,6 +785,481 @@ fr:{title:"La clause WHERE qui a fait disparaître le stock",
  principles:[["Le bruit est relatif","Ce qui est inutile pour la Finance peut être critique pour la Supply Chain."],["Chaque WHERE introduit un biais métier","Les filtres doivent être visibles et partagés, pas enfouis dans le code."],["Vérifier le critère B avant de filtrer sur A","Auditer l'effet d'un filtre sur les autres mesures avant de supprimer des lignes."]]}}
 };
 
+Object.assign(CONCEPTS,{
+  declarative:{en:"Declarative vs imperative",zh:"声明式 vs 命令式",fr:"Déclaratif vs impératif"},
+  abstraction:{en:"Cost of abstraction",zh:"抽象的代价",fr:"Coût de l'abstraction"},
+  gitops:{en:"GitOps",zh:"GitOps",fr:"GitOps"},
+  bizcontext:{en:"Business context",zh:"业务背景",fr:"Contexte métier"},
+  snapshot:{en:"Snapshots",zh:"快照",fr:"Snapshots"},
+  uom:{en:"Units of measure",zh:"计量单位",fr:"Unités de mesure"},
+  joins:{en:"Join semantics",zh:"关联（JOIN）语义",fr:"Sémantique des jointures"},
+  envs:{en:"Environments (dev / int / prod)",zh:"环境分层（开发 / 集成 / 生产）",fr:"Environnements (dev / int / prod)"},
+  access:{en:"Access management",zh:"权限管理",fr:"Gestion des accès"},
+  orchestrator:{en:"Orchestrator vs compute",zh:"编排与计算分离",fr:"Orchestrateur vs calcul"},
+  targets:{en:"Actuals vs targets",zh:"实际 vs 目标",fr:"Réel vs objectifs"},
+  versioning:{en:"Versioning",zh:"版本化",fr:"Versioning"},
+  star:{en:"Star schema",zh:"星型模型",fr:"Schéma en étoile"},
+  modular:{en:"Modular pipelines",zh:"模块化管道",fr:"Pipelines modulaires"},
+  selfservice:{en:"Self-service BI",zh:"自助式 BI",fr:"BI en libre-service"},
+  ssot:{en:"Single source of truth",zh:"唯一事实来源",fr:"Source unique de vérité"},
+  git:{en:"Version control (Git)",zh:"版本控制（Git）",fr:"Contrôle de version (Git)"},
+  recon:{en:"Data reconciliation (recette)",zh:"数据核对（recette）",fr:"Recette (réconciliation)"},
+  toolchoice:{en:"Tool choice",zh:"工具选型",fr:"Choix d'outil"},
+  drill:{en:"Drill-down",zh:"下钻",fr:"Drill-down"}
+});
+
+const SERIES={
+  looker:{name:{en:"Looker, from the inside",zh:"Looker 系列",fr:"Looker, vu de l'intérieur"},ids:["7422030713971191809","7424003613808648192","7426535365651361794","7429985750319915008","7437741724082434048"]},
+  targets:{name:{en:"Actuals vs targets",zh:"实际 vs 目标 系列",fr:"Réel vs objectifs"},ids:["7441762454910595072","7452959586988412928","7457678121765560320","7462751548490682368"]},
+  uber:{name:{en:"Deconstructing the Uber ETL pipeline",zh:"拆解 Uber ETL 管道",fr:"Déconstruire le pipeline ETL Uber"},ids:["7444624664456318976","7447161373740048384","7449697987615920128"]},
+  declarative:{name:{en:"Declarative pipelines",zh:"声明式管道系列",fr:"Pipelines déclaratifs"},ids:["7470361716858650625","7472898370634747905","7475435043721568256"]}
+};
+
+Object.assign(NOTES,{
+/* A. declarative illusion (06-24) */
+"7475435043721568256":{domain:"orchestration",also:["platform"],series:"declarative",stack:["BigQuery","GCS","Internal framework","Dataproc / Spark"],concepts:["declarative","abstraction"],
+en:{title:"When declarative becomes a black box: the broken accents",
+ tldr:"A three-line declarative export produced broken €, é and à characters, and there was no setting anywhere to fix it. Abstraction should hide plumbing, not basic controls.",
+ context:"In a declarative pipeline framework, moving a BigQuery table to a GCS bucket takes three lines of configuration: you state what you want and the platform decides how to run it.",
+ problem:"The output files came out with French characters (€, é, à) completely broken. BigQuery is natively UTF-8, so encoding cannot be set there. The likely culprit was an intermediate step (Dataproc / Spark type) hidden by the internal framework that re-encoded the data. No encoding option existed in the documentation, and support could not point to one.",
+ approach:["Rule out the source first: BigQuery stores UTF-8, so the corruption happens later in the chain.","Suspect the hidden layer: an intermediate processing step the framework runs under the hood.","Write a post-mortem on the pattern itself: what the abstraction took away, and what that costs when something goes wrong."],
+ principles:[["Abstract the plumbing, not the settings","A good framework hides repetitive wiring but still exposes basic parameters such as encoding or timezone."],["Fewer lines means less control","When a side effect appears, a short configuration leaves you nothing to adjust."],["Declarative errors are hard to read","An imperative script fails with a clear stack trace; an invisible platform parameter leaves you guessing."]]},
+zh:{title:"当声明式变成黑盒：乱码的法语字符",
+ tldr:"一个三行配置的声明式导出，把 €、é、à 全部变成了乱码，而且找不到任何能修正的设置。抽象应该隐藏管道细节，而不是没收基本控制权。",
+ context:"在一个声明式管道框架里，把 BigQuery 表导出到 GCS 存储桶只需要三行配置：你声明「要什么」，平台决定「怎么做」。",
+ problem:"导出的文件里，法语字符（€、é、à）全部损坏。BigQuery 原生就是 UTF-8，无法在源头设置编码。罪魁祸首很可能是框架在底层隐藏的某个中间处理步骤（Dataproc / Spark 之类），它对数据做了重新编码。文档里没有任何编码参数，技术支持也给不出答案。",
+ approach:["先排除源头：BigQuery 存的是 UTF-8，问题出在后面的环节。","怀疑被隐藏的那一层：框架在底层运行的中间处理步骤。","对这种模式本身做复盘：抽象拿走了什么，出问题时要付出什么代价。"],
+ principles:[["抽象管道，不要抽象设置","好的框架隐藏重复的连接细节，但仍然暴露编码、时区这类基本参数。"],["代码越少，控制越少","一旦出现副作用，几行配置让你无处可调。"],["声明式的报错难以阅读","命令式脚本出错有清晰的堆栈；看不见的平台参数只能让人去猜。"]]},
+fr:{title:"Quand le déclaratif devient une boîte noire : les accents cassés",
+ tldr:"Un export déclaratif de trois lignes a cassé les €, é et à, sans aucun paramètre pour corriger. L'abstraction doit cacher la tuyauterie, pas les réglages de base.",
+ context:"Dans un framework de pipeline déclaratif, transférer une table BigQuery vers un bucket GCS tient en trois lignes de configuration : on décrit le QUOI, la plateforme gère le COMMENT.",
+ problem:"Les fichiers de sortie contenaient des caractères français (€, é, à) complètement cassés. BigQuery étant nativement en UTF-8, impossible d'y spécifier l'encodage. Le coupable probable : un traitement intermédiaire (type Dataproc / Spark) masqué par le framework interne, qui réencodait les données. Aucune option d'encodage dans la documentation, ni via le support.",
+ approach:["Écarter la source : BigQuery stocke en UTF-8, la corruption a lieu plus loin dans la chaîne.","Soupçonner la couche cachée : l'étape intermédiaire que le framework exécute sous le capot.","Faire le post-mortem du pattern lui-même : ce que l'abstraction a retiré, et ce que cela coûte en cas d'incident."],
+ principles:[["Abstraire la tuyauterie, pas les réglages","Un bon framework cache le câblage répétitif mais expose les paramètres de base comme l'encodage ou le fuseau horaire."],["Moins de lignes, moins de contrôle","Face à un effet de bord, une configuration minimale ne laisse rien à ajuster."],["Les erreurs déclaratives se lisent mal","Un script impératif plante avec une stack trace claire ; un paramètre invisible laisse dans le flou."]]}},
+
+/* B. GitOps (06-17) */
+"7472898370634747905":{domain:"orchestration",also:["platform"],series:"declarative",stack:["Git","YAML","Airflow","Kubernetes","dbt"],concepts:["gitops","declarative","abstraction"],
+en:{title:"GitOps and declarative frameworks: automation or black box?",
+ tldr:"Pushing the declarative model to GitOps removes manual scripts and drift, but an internal framework that abstracts too much moves complexity to the platform instead of removing it.",
+ context:"Taken to its limit, the declarative model becomes GitOps: a Git repository is the single source of truth, and a YAML file automatically synchronises the infrastructure (Airflow, Kubernetes, dbt). No more manual scripts, no more configuration drift.",
+ problem:"Standardised through an internal framework, this model hides a major cost: loss of syntactic visibility. Basic parameters (an encoding, a timezone) disappear under the framework; failures come from the platform's interpreter rather than your code; and any flow with complex conditional logic turns the configuration file unreadable.",
+ approach:["Separate what GitOps does well (traceable, reproducible infrastructure) from what the framework layer adds on top.","Check, for each abstraction, which parameters are still reachable by the user.","Keep imperative escape hatches for non-standard flows instead of forcing them into YAML."],
+ principles:[["Less code is not less complexity","Complexity is moved to the platform, where it is harder to see."],["Visibility is part of developer experience","A framework should let users find a parameter in minutes, not hours."],["Declarative fits the standard case","Conditional, special-case flows need a way out of the configuration model."]]},
+zh:{title:"GitOps 与声明式框架：自动化，还是黑盒？",
+ tldr:"把声明式推到 GitOps，确实消除了手工脚本和配置漂移；但抽象过度的内部框架并没有消除复杂度，只是把它搬到了平台里。",
+ context:"声明式模型推到极致就是 GitOps：Git 仓库是唯一事实来源，一个 YAML 文件就能自动同步基础设施（Airflow、Kubernetes、dbt）。没有手工脚本，也没有配置漂移。",
+ problem:"通过内部框架标准化后，这个模式藏着一个大代价：语法可见性的丧失。基本参数（编码、时区）被埋在框架底下；报错常常来自平台的解释器而不是你的代码；一旦流程需要复杂的条件逻辑，配置文件就变得难以阅读。",
+ approach:["把 GitOps 本身的优点（可追溯、可复现的基础设施）和框架层额外叠加的东西分开看。","逐一检查每层抽象：用户还能触达哪些参数。","为非标准流程保留命令式的「逃生口」，而不是硬塞进 YAML。"],
+ principles:[["代码少不等于复杂度低","复杂度只是被搬进了平台，更难被看见。"],["可见性是开发体验的一部分","框架应该让人几分钟内找到一个参数，而不是几个小时。"],["声明式适合标准场景","有条件分支的特殊流程，需要能跳出配置模型的出口。"]]},
+fr:{title:"GitOps et frameworks déclaratifs : automatisation ou boîte noire ?",
+ tldr:"Pousser le déclaratif jusqu'au GitOps supprime scripts manuels et dérive de configuration, mais un framework interne trop abstrait déplace la complexité vers la plateforme au lieu de la supprimer.",
+ context:"Poussé à son paroxysme, le modèle déclaratif mène au GitOps : un dépôt Git devient l'unique source de vérité, et un fichier YAML synchronise automatiquement l'infrastructure (Airflow, Kubernetes, dbt). Plus de scripts manuels, plus de dérive.",
+ problem:"Standardisé via un framework interne, ce modèle cache un coût majeur : la perte de visibilité syntaxique. Les paramètres de base (encodage, fuseau) disparaissent sous le capot ; les erreurs viennent de l'interpréteur de la plateforme plutôt que de votre code ; et dès qu'un flux demande une logique conditionnelle, la configuration devient illisible.",
+ approach:["Distinguer ce que le GitOps apporte (une infra traçable et reproductible) de ce que la couche framework ajoute par-dessus.","Vérifier, pour chaque abstraction, quels paramètres restent accessibles à l'utilisateur.","Garder des issues impératives pour les flux non standard au lieu de tout forcer en YAML."],
+ principles:[["Moins de code n'est pas moins de complexité","La complexité est déplacée vers la plateforme, où elle se voit moins."],["La visibilité fait partie de l'expérience développeur","Un framework doit permettre de trouver un paramètre en minutes, pas en heures."],["Le déclaratif excelle sur le standard","Les cas conditionnels ont besoin d'une sortie hors du modèle de configuration."]]}},
+
+/* C. Declarative pipeline (06-10) */
+"7470361716858650625":{domain:"orchestration",also:[],series:"declarative",fig:"declar",stack:["Airflow","Kestra","YAML / JSON","CI/CD","Dataproc","Kubernetes"],concepts:["declarative","orchestrator"],
+en:{title:"Why declarative pipelines are reshaping data engineering",
+ tldr:"Data teams increasingly describe what they want (target structure, SQL, dependencies) and let the platform decide how to run it. In practice, most companies land on an internal framework on top of Airflow.",
+ context:"Architectures are moving towards configuration (technical low-code). The imperative approach writes scripts that tell the system how to do things; the declarative approach describes the what and leaves execution to the platform.",
+ problem:"Which side should a stack choose? Airflow remains the industry standard thanks to its flexibility, while newer tools such as Kestra make native declarative YAML their core to improve readability.",
+ approach:["Recognise that the choice is rarely binary: many companies build internal frameworks on top of Airflow.","Users declare schemas and dependencies in standardised YAML / JSON files.","After CI/CD validation, Airflow drives elastic compute (Dataproc, Kubernetes) in the background."],
+ principles:[["Describe the what, delegate the how","Declarative configuration makes pipelines easier to read and review."],["Hybrid is the common reality","A declarative layer over a flexible orchestrator combines readability with power."],["Validate before you run","CI/CD on configuration files is what makes the declarative layer safe."]]},
+zh:{title:"为什么声明式管道正在重塑数据工程",
+ tldr:"数据团队越来越多地只描述「要什么」（目标结构、SQL、依赖），让平台决定「怎么跑」。现实中，大多数公司最终在 Airflow 之上搭了一层内部框架。",
+ context:"架构正越来越多地转向配置化（技术层面的低代码）。命令式写脚本告诉系统「怎么做」；声明式描述「做什么」，把执行交给平台。",
+ problem:"技术栈该选哪一边？Airflow 凭借极高的灵活性仍是行业标准；Kestra 等新工具则以原生声明式 YAML 为核心，提升可读性。",
+ approach:["认识到选择很少是非此即彼：许多公司在 Airflow 之上构建内部框架。","用户在标准化的 YAML / JSON 文件里声明表结构和依赖。","经过 CI/CD 校验后，由 Airflow 在后台调度弹性计算资源（Dataproc、Kubernetes）。"],
+ principles:[["描述「做什么」，委托「怎么做」","声明式配置让管道更易读、更易评审。"],["混合模式才是常态","在灵活的编排器上加一层声明式，兼顾可读性与能力。"],["先校验，再运行","对配置文件做 CI/CD，是声明式层安全可靠的前提。"]]},
+fr:{title:"Pourquoi le pipeline déclaratif redéfinit la data",
+ tldr:"Les équipes data décrivent de plus en plus le QUOI (structure cible, SQL, dépendances) et laissent la plateforme gérer le COMMENT. En pratique, beaucoup d'entreprises construisent un framework interne au-dessus d'Airflow.",
+ context:"Les architectures évoluent vers la configuration (le « low-code » technique). L'approche impérative écrit des scripts qui dictent au système comment faire ; l'approche déclarative décrit le quoi et délègue l'exécution.",
+ problem:"De quel côté placer sa stack ? Airflow reste le standard de l'industrie grâce à sa flexibilité, tandis que des outils plus récents comme Kestra font du YAML déclaratif natif leur cœur pour gagner en lisibilité.",
+ approach:["Constater que le choix est rarement binaire : beaucoup d'entreprises bâtissent des frameworks internes sur Airflow.","L'utilisateur déclare schémas et dépendances dans des fichiers YAML / JSON standardisés.","Après validation CI/CD, Airflow pilote en arrière-plan un calcul élastique (Dataproc, Kubernetes)."],
+ principles:[["Décrire le quoi, déléguer le comment","La configuration déclarative rend les pipelines plus lisibles et plus faciles à relire."],["L'hybride est la réalité courante","Une couche déclarative sur un orchestrateur flexible combine lisibilité et puissance."],["Valider avant d'exécuter","La CI/CD sur les fichiers de configuration rend la couche déclarative fiable."]]}},
+
+/* D. Cash flow (06-03) */
+"7467824929464516608":{domain:"business",also:[],fig:"treso",stack:["Supply chain data","BI"],concepts:["bizcontext","metricDef"],
+en:{title:"Data vs cash flow: why goods receipts collapse at month-end",
+ tldr:"Receipts drop at the end of each month and spike on the 2nd. It is not a pipeline bug but a treasury decision, and models that ignore it learn from accounting behaviour.",
+ context:"A classic case in supply chain BI: at the end of every month, and especially on 30 June and 31 December, goods receipts mysteriously collapse in the reports, then explode on the 2nd of the following month.",
+ problem:"The pattern looks like a data quality issue. It is in fact a financial choice: postponing the validation of deliveries by a few days keeps stock off the balance sheet just before closing (window dressing), and delays the start of invoicing, preserving cash when shareholders and markets are watching it.",
+ approach:["Treat the month-end dip as a business signal before treating it as an anomaly.","Read lead times in that light: a longer lead time at half-year end can be a truck waiting at the warehouse door for accounting reasons, not a failing supplier.","Bring the finance calendar (closing dates, working capital strategy) into forecasting and KPI design."],
+ principles:[["Business context first","Without it, forecasts are built on human anomalies rather than operational reality."],["Metrics can be distorted by policy","A KPI can move because of a financial decision, not because the process changed."],["Know the money behind the data","Understanding how finance drives the business helps design relevant data architectures."]]},
+zh:{title:"数据 vs 现金流：为什么月末收货量会断崖式下跌",
+ tldr:"每到月末收货量骤降、次月 2 号暴涨。这不是管道 bug，而是资金管理的决定；忽视这一点的模型，学到的是会计行为。",
+ context:"供应链 BI 里有个经典案例：每个月底，尤其是 6 月 30 日和 12 月 31 日，报表里的收货量神秘地断崖下跌，然后在下个月 2 号暴涨。",
+ problem:"这看起来像数据质量问题，实际上是财务选择：把交货确认推迟几天，可以在结账前不让库存撑大资产负债表（window dressing），同时推迟开票的起点，在股东和市场盯着现金的时候保住流动性。",
+ approach:["先把月末下跌当作业务信号，而不是异常值。","用这个视角解读交付周期：半年末周期变长，可能是卡车因为会计原因在仓库门口等着，而不是供应商出了问题。","把财务日历（结账日、营运资金策略）纳入预测和 KPI 设计。"],
+ principles:[["业务背景优先","没有它，预测模型会建立在人为异常之上，而不是运营现实。"],["指标会被政策扭曲","KPI 的变化可能来自财务决策，而不是流程本身的变化。"],["了解数据背后的钱","理解财务如何驱动业务，才能设计出贴切的数据架构。"]]},
+fr:{title:"Data vs trésorerie : pourquoi les réceptions s'effondrent en fin de mois",
+ tldr:"Les réceptions chutent en fin de mois puis explosent le 2. Ce n'est pas un bug de pipeline mais une décision de trésorerie, et un modèle qui l'ignore apprend des comportements comptables.",
+ context:"Un cas d'école en BI Supply Chain : à chaque fin de mois, surtout au 30 juin et au 31 décembre, la réception des marchandises s'effondre mystérieusement dans les rapports, avant d'exploser le 2 du mois suivant.",
+ problem:"Le phénomène ressemble à un problème de qualité. C'est en réalité un choix financier : reporter de quelques jours la validation des livraisons évite de gonfler les stocks au bilan juste avant la clôture (window dressing) et décale le point de départ de la facturation, préservant les liquidités quand actionnaires et marchés regardent le cash.",
+ approach:["Traiter la chute de fin de mois comme un signal métier avant de la traiter comme une anomalie.","Relire les délais sous cet angle : un Lead Time qui s'allonge en fin de semestre peut être un camion qui attend aux portes de l'entrepôt pour des raisons comptables.","Intégrer le calendrier financier (clôtures, stratégie de BFR) dans les prévisions et la conception des KPI."],
+ principles:[["Le contexte métier est roi","Sans lui, les prévisions reposent sur des anomalies humaines plutôt que sur la réalité opérationnelle."],["Une politique peut distordre une métrique","Un KPI peut bouger à cause d'une décision financière, pas d'un changement de processus."],["Comprendre l'argent derrière la donnée","Savoir ce qui pilote la finance aide à concevoir des architectures pertinentes."]]}},
+
+/* E. SAP curiosity (05-27) */
+"7465288302364131329":{domain:"business",also:["modeling"],fig:"ghost",stack:["SAP","Data lake","SQL"],concepts:["snapshot","uom","statehist","xfunc"],
+en:{title:"Ghost stock: why a data engineer has to stay curious",
+ tldr:"An unrequested Date column led to three hidden traps in an SAP stock project. Following the request alone would have produced a clean but wrong dashboard.",
+ context:"A stock analysis project on SAP data looked simple on paper. While inspecting the data lake tables, I noticed a Date column the client had not asked for, and dug into it out of technical curiosity.",
+ problem:"Three problems surfaced. When an item went from 200 units to 0, the system wrote no row at 0; it simply stopped updating the row. Volumes were stored without units of measure, mixing screws (units), liquids (litres) and raw materials (tonnes). And a strategic part of the stock held at subcontracting partners was not captured by the current pipeline at all.",
+ approach:["Rebuild daily stock snapshots so that the absence of an update is read as a change, not as a constant 200.","Bring in units of measure before any aggregation, and never sum quantities across units.","Add the subcontracting flows so the model covers all stock, not only stock in own warehouses."],
+ principles:[["Don't take data at face value","Ask what an unexpected column means before deciding it is irrelevant."],["Absence of a record is information","Systems that only log changes need snapshots to show the current state."],["Technically clean is not business-correct","The pipeline's job includes checking that the result matches reality."]]},
+zh:{title:"幽灵库存：为什么数据工程师必须保持好奇心",
+ tldr:"一个没人要求的日期字段，牵出了 SAP 库存项目里三个隐藏陷阱。如果只按需求做，交付的会是一个技术上干净、业务上错误的看板。",
+ context:"一个基于 SAP 数据的库存分析项目，纸面上很简单。在检查数据湖的表时，我注意到一个客户并没有要求的日期字段，出于技术好奇心深挖了一下。",
+ problem:"挖出了三个问题。物料从 200 件降到 0 时，系统不会写一行 0，只是停止更新那一行。体积数据没有计量单位，螺丝（件）、液体（升）、原材料（吨）混在一起。还有一部分放在外协合作方的战略库存，当前管道根本没有采集。",
+ approach:["重建每日库存快照，让「没有更新」被正确理解为变化，而不是永远停在 200。","在任何聚合之前补上计量单位，绝不跨单位求和。","接入外协流程，让模型覆盖全部库存，而不只是自有仓库。"],
+ principles:[["不要轻信数据表面","在判定一个意料之外的字段无关之前，先弄清它的含义。"],["没有记录本身就是信息","只记录变化的系统，需要快照才能呈现当前状态。"],["技术上干净不等于业务上正确","管道的职责包括检查结果是否符合现实。"]]},
+fr:{title:"Le stock fantôme : pourquoi un Data Engineer doit rester curieux",
+ tldr:"Une colonne Date non demandée a révélé trois pièges dans un projet de stocks SAP. S'en tenir à la demande aurait donné un dashboard propre techniquement, mais faux pour le métier.",
+ context:"Un projet d'analyse des stocks sur données SAP, simple sur le papier. En inspectant les tables du Data Lake, j'ai repéré une colonne Date que le client n'avait pas demandée, et j'ai creusé par curiosité technique.",
+ problem:"Trois loups sont apparus. Quand un article passait de 200 unités à 0, le système n'écrivait aucune ligne à 0 : il arrêtait simplement de mettre à jour la ligne. Les volumes étaient stockés sans unité de mesure, mêlant vis (unités), liquides (litres) et matières premières (tonnes). Enfin, une partie stratégique du stock, chez des sous-traitants, n'était pas captée par le pipeline.",
+ approach:["Reconstruire des snapshots de stock quotidiens pour que l'absence de mise à jour soit lue comme un changement, pas comme 200 à l'infini.","Intégrer les unités de mesure avant toute agrégation, et ne jamais sommer entre unités différentes.","Ajouter les flux de sous-traitance pour couvrir tout le stock, pas seulement celui des entrepôts propres."],
+ principles:[["Ne jamais croire les données sur parole","Comprendre une colonne inattendue avant de la juger inutile."],["L'absence d'enregistrement est une information","Un système qui ne journalise que les changements a besoin de snapshots pour montrer l'état courant."],["Propre techniquement ne veut pas dire juste","Vérifier que le résultat colle à la réalité fait partie du travail."]]}},
+
+/* F. Targets phase 3 (05-20) */
+"7462751548490682368":{domain:"business",also:["modeling"],series:"targets",fig:"joins",stack:["SQL","BigQuery","Looker"],concepts:["targets","joins"],
+en:{title:"Actuals vs targets, phase 3: choose the join from the business question",
+ tldr:"LEFT JOIN or FULL OUTER JOIN is not a technical detail: one hides planned-but-missing items, the other turns them into red flags. Ask what the dashboard is for before writing the join.",
+ context:"After the format (phase 1) and granularity (phase 2), the last step is the final display. A dashboard does not only translate numbers, it translates a business intention.",
+ problem:"Joining actuals and targets can drop or keep items that have a target but no actuals yet, for example a product budgeted for launch whose launch is delayed (sales = 0). Which behaviour is right depends on who uses the dashboard.",
+ approach:["Ask stakeholders first: is this an operational optimisation tool or a strategic steering tool?","Execution dashboard: LEFT JOIN from actuals to targets. Only live products and regions appear; the delayed launch stays out of view on purpose.","Strategic dashboard: FULL OUTER JOIN. The blocked product shows as target 100k€, actual 0, a red flag management can act on."],
+ principles:[["There is no wrong join, only a wrong reading of the business","Each join type answers a different question."],["Missing data can be the insight","In a strategic view, what should exist but doesn't is often the most important line."],["Align first, code second","The join type is a requirement to collect, not a default to pick."]]},
+zh:{title:"实际 vs 目标（第三阶段）：从业务问题出发选择 JOIN",
+ tldr:"LEFT JOIN 还是 FULL OUTER JOIN 不是技术细节：前者会隐藏「计划了但没发生」的项目，后者会把它们变成红色警报。写 JOIN 之前，先问看板是给谁、做什么用的。",
+ context:"在格式（第一阶段）和粒度（第二阶段）之后，最后一步是最终的呈现。看板不只是翻译数字，更是在翻译一种业务意图。",
+ problem:"关联实际和目标时，那些有目标但还没有实际值的项目会被丢掉或保留，比如一个已列入预算、但推迟上市的产品（销量 = 0）。哪种行为正确，取决于谁在用这个看板。",
+ approach:["先问业务方：这是运营优化工具，还是战略管控工具？","执行类看板：从实际到目标做 LEFT JOIN。只显示在售产品和开放区域，推迟上市的产品被有意排除在视野之外。","战略类看板：FULL OUTER JOIN。卡住的产品显示为目标 10 万欧、实际 0，成为管理层可以行动的红色警报。"],
+ principles:[["没有错误的 JOIN，只有对业务的误读","每种 JOIN 回答的是不同的问题。"],["缺失的数据本身可能就是洞察","在战略视图里，「应该有却没有」的那一行往往最重要。"],["先对齐，再编码","JOIN 类型是需要收集的需求，而不是随手选的默认值。"]]},
+fr:{title:"Réel vs objectifs, phase 3 : choisir la jointure selon la question métier",
+ tldr:"LEFT JOIN ou FULL OUTER JOIN n'est pas un détail technique : l'un masque ce qui était prévu mais absent, l'autre en fait une alerte rouge. Demander à quoi sert le dashboard avant d'écrire la jointure.",
+ context:"Après le format (phase 1) et la granularité (phase 2), reste l'étape cruciale : l'affichage final. Un dashboard ne traduit pas que des chiffres, il traduit une intention business.",
+ problem:"La jointure Réel / Objectifs peut écarter ou conserver les éléments qui ont un objectif mais pas encore de réel, par exemple un produit budgété dont le lancement est retardé (ventes = 0). Le bon comportement dépend de l'usage du dashboard.",
+ approach:["Demander d'abord aux stakeholders : outil d'optimisation opérationnelle ou de pilotage stratégique ?","Dashboard d'exécution : LEFT JOIN des actuals vers les targets. Seuls les produits et régions « live » apparaissent ; le lancement retardé reste volontairement hors champ.","Dashboard stratégique : FULL OUTER JOIN. Le produit bloqué s'affiche avec objectif 100 k€, réel 0 : une alerte rouge actionnable pour la direction."],
+ principles:[["Il n'y a pas de mauvaise jointure, que des contresens métier","Chaque type de jointure répond à une question différente."],["La donnée manquante peut être l'information","Dans une vue stratégique, ce qui devrait exister et n'existe pas est souvent la ligne clé."],["S'aligner d'abord, coder ensuite","Le type de jointure est une exigence à recueillir, pas un choix par défaut."]]}},
+
+/* G. GCP architecture (05-13) */
+"7460214839194374144":{domain:"platform",also:["orchestration"],fig:"gcp",stack:["Google Cloud","BigQuery","Infrastructure as Code"],concepts:["finops","envs","access"],
+en:{title:"GCP project layout for FinOps: separate storage from compute",
+ tldr:"Keep data in one central lake project, bill queries to one project per department, and never skip the integration environment between dev and production.",
+ context:"On Google Cloud, the way projects are structured determines how transparent costs are and how safely changes reach production.",
+ problem:"With data and compute mixed in the same projects, it is hard to know which department spends what. And moving straight from DEV to production is a major risk, because only production has real volumes and real connectors.",
+ approach:["Group all data in a single storage project (the data lake).","Attach compute to billing projects per department (Marketing, R&D…), so each pays for its own queries and re-charging is straightforward.","Keep three tiers, DEV → INT → OPE. INT is where pipelines run end to end with realistic volumes and connectors, and where Infrastructure-as-Code scripts are validated before go-live."],
+ principles:[["Centralise data, distribute consumption","One copy of the truth, with usage that stays traceable per team."],["Cost transparency follows project boundaries","Billing is easiest to read when compute is attached to whoever runs it."],["Integration is not optional","A staging tier with production-like conditions catches what DEV cannot."]]},
+zh:{title:"面向 FinOps 的 GCP 项目结构：存储与计算分离",
+ tldr:"数据集中放在一个数据湖项目里，查询费用按部门记到各自的计费项目；从开发到生产之间，绝不跳过集成环境。",
+ context:"在 Google Cloud 上，项目如何组织，决定了成本是否透明，以及变更能否安全地进入生产。",
+ problem:"如果数据和计算混在同一批项目里，很难知道哪个部门花了多少钱。而从 DEV 直接上生产风险很大，因为只有生产环境才有真实的数据量和真实的连接器。",
+ approach:["把所有数据集中在一个存储项目（数据湖）里。","把计算挂到按部门划分的计费项目上（市场、研发……），各自为自己的查询付费，分摊也就一目了然。","保留三层环境：DEV → INT → OPE。INT 是用接近真实的数据量和连接器端到端跑管道的地方，也是基础设施即代码（IaC）脚本上线前的验证点。"],
+ principles:[["数据集中，消费分散","只有一份事实来源，同时每个团队的使用都可追溯。"],["成本透明取决于项目边界","计算挂在谁身上，账单就最容易看清。"],["集成环境不是可选项","接近生产条件的预发布层，能发现 DEV 发现不了的问题。"]]},
+fr:{title:"Organisation des projets GCP pour le FinOps : séparer stockage et calcul",
+ tldr:"Les données dans un projet Data Lake central, le calcul facturé à un projet par département, et jamais de raccourci entre DEV et production sans environnement d'intégration.",
+ context:"Sur Google Cloud, la structuration des projets détermine la transparence des coûts et la sécurité des mises en production.",
+ problem:"Quand données et calcul sont mêlés dans les mêmes projets, impossible de savoir quel département dépense quoi. Et passer directement du DEV à l'OPE est un risque majeur, car seule la production a des volumes et des connecteurs réels.",
+ approach:["Regrouper les données dans un projet de stockage unique (le Data Lake).","Rattacher le calcul à des projets de facturation par département (Marketing, R&D…) : chacun paie ses requêtes, la refacturation devient simple.","Garder trois niveaux, DEV → INT → OPE. L'INT teste les pipelines de bout en bout avec des volumes et connecteurs réalistes, et valide les scripts d'Infrastructure as Code avant le go-live."],
+ principles:[["Centraliser la donnée, distribuer la consommation","Une seule vérité, avec un usage traçable par équipe."],["La transparence des coûts suit les frontières de projet","La facture se lit mieux quand le calcul est rattaché à qui l'exécute."],["L'intégration n'est pas optionnelle","Un staging proche de la production détecte ce que le DEV ne voit pas."]]}}
+});
+Object.assign(NOTES,{
+/* H. Targets phase 2 (05-06) */
+"7457678121765560320":{domain:"modeling",also:["semantic"],series:"targets",fig:"fanout",stack:["SQL","BigQuery","Looker"],concepts:["targets","fanout","grain"],
+en:{title:"Actuals vs targets, phase 2: unpivot, then beat the fan-out",
+ tldr:"Budgets arrive as 12 monthly columns and at a coarser grain than sales. Unpivot them into rows, then make sure a monthly target is not repeated on every daily sales row.",
+ context:"Reconciling targets with actuals is a modelling challenge with two recurring obstacles: the shape of the budget file, and the difference in granularity between the two datasets.",
+ problem:"Budgets often come wide: one row per product and one column per month. And when sales are daily but targets monthly, a plain join copies the monthly target onto every daily row, so summing it multiplies the target by the number of days (the fan-out effect).",
+ approach:["UNPIVOT the twelve monthly columns into rows so targets line up with the time dimension of actuals.","SQL option: use ROW_NUMBER() to keep the target value only on the first row of each month. It works, but it is fragile and hard to maintain when filters or grain change.","BI option (Looker): rely on symmetric aggregates with primary keys, which de-duplicate the target automatically. This is the most robust choice."],
+ principles:[["Normalise shape before joining","Wide spreadsheets should become long tables before they meet transactional data."],["Know the grain of both sides","Joining a coarse table to a fine one duplicates the coarse values."],["Prefer mechanisms over tricks","A semantic layer that handles de-duplication beats hand-written window logic."]]},
+zh:{title:"实际 vs 目标（第二阶段）：先逆透视，再解决扇出",
+ tldr:"预算通常是 12 个月份列，而且粒度比销售数据粗。先把它逆透视成行，再确保月度目标不会被复制到每一条日销售记录上。",
+ context:"把目标和实际对上，是一个建模难题，反复出现两个障碍：预算文件的形状，以及两份数据的粒度差异。",
+ problem:"预算常常是「宽表」：每个产品一行，每个月一列。而当销售是按天、目标是按月时，直接关联会把月度目标复制到每一条日记录上，一求和，目标就被乘以了天数（扇出效应）。",
+ approach:["用 UNPIVOT 把 12 个月份列转成行，让目标与实际数据的时间维度对齐。","SQL 方案：用 ROW_NUMBER() 只在每月第一行保留目标值。能用，但很脆弱，筛选或粒度一变就难以维护。","BI 方案（Looker）：依靠带主键的对称聚合（symmetric aggregates）自动去重。这是最稳健的选择。"],
+ principles:[["关联之前先统一形状","宽格式的表格应先转成长表，再和交易数据相遇。"],["弄清两边的粒度","粗粒度表关联细粒度表，会复制粗粒度的值。"],["机制优于技巧","能自动去重的语义层，胜过手写的窗口函数逻辑。"]]},
+fr:{title:"Réel vs objectifs, phase 2 : unpivot, puis éviter le fan-out",
+ tldr:"Les budgets arrivent en 12 colonnes mensuelles et à une granularité plus grossière que les ventes. Les passer en lignes, puis s'assurer qu'un objectif mensuel n'est pas répété sur chaque vente quotidienne.",
+ context:"Réconcilier objectifs et réalisé est un défi de modélisation avec deux obstacles récurrents : la forme du fichier budget, et l'écart de granularité entre les deux jeux de données.",
+ problem:"Les budgets arrivent souvent « wide » : une ligne par produit et une colonne par mois. Et quand les ventes sont quotidiennes mais les objectifs mensuels, une jointure simple recopie l'objectif sur chaque ligne du jour : en sommant, on multiplie l'objectif par le nombre de jours (effet fan-out).",
+ approach:["UNPIVOT des douze colonnes mensuelles en lignes pour aligner les objectifs sur la dimension temps du réalisé.","Option SQL : ROW_NUMBER() pour n'attribuer l'objectif qu'à la première ligne du mois. Cela marche, mais c'est fragile et difficile à maintenir quand les filtres ou le grain changent.","Option BI (Looker) : les Symmetric Aggregates avec clés primaires dédoublonnent automatiquement. C'est la solution la plus robuste."],
+ principles:[["Normaliser la forme avant de joindre","Un tableur « wide » doit devenir une table « long » avant de rencontrer les transactions."],["Connaître le grain des deux côtés","Joindre une table grossière à une table fine duplique les valeurs grossières."],["Préférer les mécanismes aux astuces","Une couche sémantique qui dédoublonne bat une logique de fenêtrage écrite à la main."]]}},
+
+/* I. Orchestration brain vs arms (04-30) */
+"7455496222523535360":{domain:"orchestration",also:[],fig:"brain",stack:["Kestra","Prefect","Airflow","Dataproc","Kubernetes","Snowflake"],concepts:["orchestrator","dag"],
+en:{title:"Orchestration: separate the brain from the arms",
+ tldr:"An orchestrator should decide when and in what order tasks run, not always run the heavy work itself. Whether to decouple depends on your volumes and maturity.",
+ context:"Orchestration is often discussed without defining its boundary, yet that boundary decides how stable a platform is. The orchestrator is the conductor: it sets when, how and in which order tasks run.",
+ problem:"Two paradigms meet in practice. In the all-in-one model (for example Kestra on a VM), the orchestrator both triggers and executes. In the decoupled model (Airflow with Dataproc or Kubernetes), it delegates heavy compute to a distributed engine. Each has its own failure mode.",
+ approach:["All-in-one suits agile projects and moderate volumes with quick setup. Risk: resource contention. If one Python script saturates the VM's RAM, the whole orchestrator goes down.","Decoupled suits demanding industrial environments and complex PySpark pipelines: near-unlimited scaling, failure isolation and fine-grained governance. Cost: more operational complexity (ephemeral infrastructure) and scattered logs.","Choose by maturity: Kestra / Prefect for speed and centralisation; Airflow + Dataproc / Snowflake for robustness and distributed compute."],
+ principles:[["Keep the scheduler alive","Heavy jobs should not be able to take down the component that schedules everything else."],["Isolation has a price","Decoupling buys resilience and scale, and costs operational complexity."],["Fit the tool to the stage","The right architecture depends on volumes, team size and maturity, not on fashion."]]},
+zh:{title:"数据编排：把「大脑」和「手臂」分开",
+ tldr:"编排器应该决定任务何时、按什么顺序运行，而不总是亲自干重活。是否解耦，取决于数据量和团队成熟度。",
+ context:"人们常谈编排，却很少定义它的边界，而这条边界决定了平台的稳定性。编排器是指挥：它决定任务何时、如何、按什么顺序执行。",
+ problem:"实践中有两种范式。一体化模式（比如在虚拟机上跑 Kestra）里，编排器既触发也执行。解耦模式（Airflow 配 Dataproc 或 Kubernetes）里，它把重计算交给分布式引擎。两者各有自己的失败方式。",
+ approach:["一体化适合敏捷项目、中等数据量、快速搭建。风险是资源争用：一个 Python 脚本占满虚拟机内存，整个编排器就会宕掉。","解耦适合要求严苛的工业级环境和复杂的 PySpark 管道：近乎无限的扩展、故障隔离、精细治理。代价是运维更复杂（临时基础设施），日志也更分散。","按成熟度选择：Kestra / Prefect 追求速度和集中；Airflow + Dataproc / Snowflake 追求稳健和分布式算力。"],
+ principles:[["保证调度器活着","重任务不应该有能力拖垮负责调度一切的组件。"],["隔离是有代价的","解耦换来韧性和扩展性，付出的是运维复杂度。"],["工具要匹配阶段","合适的架构取决于数据量、团队规模和成熟度，而不是潮流。"]]},
+fr:{title:"Orchestration : séparer le cerveau des bras",
+ tldr:"Un orchestrateur doit décider quand et dans quel ordre les tâches tournent, pas toujours exécuter lui-même le calcul lourd. Découpler ou non dépend des volumes et de la maturité.",
+ context:"On parle souvent d'orchestration sans en définir la frontière, alors que c'est là que se joue la stabilité d'une plateforme. L'orchestrateur est le chef d'orchestre : il définit le quand, le comment et l'ordre des tâches.",
+ problem:"Deux paradigmes coexistent. Dans le modèle tout-en-un (par exemple Kestra sur VM), l'orchestrateur déclenche et exécute. Dans le modèle découplé (Airflow avec Dataproc ou Kubernetes), il délègue le calcul lourd à un moteur distribué. Chacun a son mode de défaillance.",
+ approach:["Tout-en-un : idéal pour des projets agiles, des volumes modérés et une mise en place rapide. Risque : la contention de ressources. Si un script Python sature la RAM de la VM, tout l'orchestrateur tombe.","Découplé : pour des environnements industriels exigeants et des pipelines PySpark complexes. Scalabilité, isolation des pannes, gouvernance fine. Coût : complexité opérationnelle (infra éphémère) et logs dispersés.","Choisir selon la maturité : Kestra / Prefect pour la vélocité et la centralisation ; Airflow + Dataproc / Snowflake pour la robustesse et le calcul distribué."],
+ principles:[["Garder l'ordonnanceur en vie","Un job lourd ne doit pas pouvoir faire tomber le composant qui planifie tout le reste."],["L'isolation a un prix","Découpler apporte résilience et scalabilité, au prix de la complexité opérationnelle."],["Adapter l'outil au stade","La bonne architecture dépend des volumes, de l'équipe et de la maturité, pas de la mode."]]}},
+
+/* J. Targets phase 1 (04-23) */
+"7452959586988412928":{domain:"platform",also:["modeling"],series:"targets",stack:["dbt seed","BigQuery snapshots","Airflow","SharePoint / Excel"],concepts:["targets","versioning","snapshot"],
+en:{title:"Actuals vs targets, phase 1: ingest the human chaos",
+ tldr:"Actuals live in clean systems; targets live in spreadsheets that change silently. Version and snapshot the targets so you can prove what the goal was at any date.",
+ context:"Comparing results with objectives looks like the basics of the job, yet it is one of the most frequent scenarios and one of the hardest to stabilise in production.",
+ problem:"It confronts two worlds that don't talk to each other. Actuals are clean, structured and stored in the CRM. Targets are born in Excel or SharePoint and get changed quietly on a Friday evening without telling anyone, so dashboard numbers shift “mysteriously” from one month to the next.",
+ approach:["Static targets: version the CSV files directly in Git with dbt seed.","Living targets (SharePoint, spreadsheets): load them through a managed sync flow and add data quality checks that detect a collapsed file structure before loading.","Time travel: automate a regular snapshot of the target table (for example a monthly BigQuery table snapshot) to prove that at date T the objective was X, even if the source file has since been overwritten."],
+ principles:[["Treat human-made data with suspicion","Manually edited files need structure checks before they enter the pipeline."],["Version anything that can change silently","History is what makes an audit answerable."],["Snapshots turn disputes into lookups","“What was the target then?” should be a query, not a debate."]]},
+zh:{title:"实际 vs 目标（第一阶段）：驯服人为制造的混乱",
+ tldr:"实际数据在规范的系统里，目标却在悄悄被改动的表格里。给目标做版本和快照，才能证明任一时点的目标到底是多少。",
+ context:"把结果和目标做比较，看起来是本行的基本功，却是最常见、也最难在生产环境稳定下来的场景之一。",
+ problem:"它让两个互不相通的世界正面相遇。实际数据干净、结构化，放在 CRM 里。目标诞生于 Excel 或 SharePoint，常在某个周五晚上被人悄悄改掉，没人通知，于是看板上的数字每个月都「神秘地」变化。",
+ approach:["静态目标：用 dbt seed 把 CSV 文件直接纳入 Git 版本管理。","动态目标（SharePoint、表格）：通过托管的同步流程加载，并在加载前用数据质量检查发现文件结构是否崩坏。","时间回溯：定期自动为目标表做快照（例如每月一次 BigQuery 表快照），即使源文件后来被覆盖，也能证明在 T 时刻目标是 X。"],
+ principles:[["对人工数据保持怀疑","手工编辑的文件进入管道前，必须做结构检查。"],["会被悄悄修改的东西都要版本化","有了历史，审计问题才有答案。"],["快照把争论变成查询","「当时的目标是多少？」应该是一条查询，而不是一场争论。"]]},
+fr:{title:"Réel vs objectifs, phase 1 : dompter le chaos humain",
+ tldr:"Le réalisé vit dans des systèmes propres ; les objectifs dans des tableurs modifiés en douce. Versionner et snapshotter les objectifs pour prouver ce qu'était la cible à toute date.",
+ context:"Comparer ses réalisations à ses objectifs semble être la base du métier. C'est pourtant l'un des scénarios les plus fréquents et l'un des plus difficiles à stabiliser en production.",
+ problem:"On confronte deux mondes qui ne se parlent pas. Les Actuals sont propres, structurés, nichés dans le CRM. Les Targets naissent dans un Excel ou un SharePoint, modifiés en douce un vendredi soir sans prévenir personne : les chiffres changent « mystérieusement » d'un mois à l'autre.",
+ approach:["Objectifs statiques : versionner les CSV directement dans Git avec dbt seed.","Objectifs vivants (SharePoint, tableurs) : les charger via un flux de synchronisation géré, avec des contrôles qualité qui détectent l'effondrement d'une structure Excel avant chargement.","Time travel : automatiser un snapshot régulier de la table d'objectifs (par exemple un snapshot BigQuery mensuel) pour prouver qu'à l'instant T l'objectif était X, même si le fichier source a été écrasé depuis."],
+ principles:[["Se méfier de la donnée saisie à la main","Les fichiers édités manuellement doivent être contrôlés avant d'entrer dans le pipeline."],["Versionner tout ce qui peut changer en silence","L'historique rend un audit possible."],["Le snapshot transforme un débat en requête","« Quel était l'objectif à l'époque ? » doit se résoudre par une requête."]]}},
+
+/* K. Environments & access (04-17) */
+"7450785147924312064":{domain:"platform",also:[],stack:["Cloud IAM","Dev / prod environments","Dashboards"],concepts:["envs","access","doc"],
+en:{title:"Environments and access in large organisations: be explicit, not perfect",
+ tldr:"Clean dev / prod separation is the textbook rule, but fine-grained, siloed access can make it impossible. Acknowledge the constraint and write the choice down.",
+ context:"In theory the good practice is clear: separate dev and prod properly, with distinct access, to guarantee data quality and security.",
+ problem:"In large accounts, governance is heavily siloed and access is very granular. On raw data, only production access was available. The code could be identical and orchestration well defined, but rights did not allow the same data scope in each environment. A related question was which environment a dashboard should be published from: where is the data really accessible, who can see what, and which source of truth should be exposed?",
+ approach:["Accept that a perfect environment abstraction was not achievable under the access model.","Make the choices explicit: which environment reads which data, and why.","Reflect those choices in configuration and documentation so the next person understands them."],
+ principles:[["Governance lives in access, not only in code","Who can read what shapes the architecture as much as the model does."],["Explicit beats elegant","A documented compromise causes fewer misunderstandings than an idealised design that silently differs from reality."],["Choose the publishing environment deliberately","Where a dashboard lives decides which truth its viewers see."]]},
+zh:{title:"大型企业里的环境与权限：要明确，而不是完美",
+ tldr:"开发 / 生产干净分离是教科书规则，但极细且分散的权限可能让它无法实现。承认约束，并把选择写下来。",
+ context:"理论上，最佳实践很清楚：把开发和生产环境干净地分开，权限各自独立，以保证数据质量和安全。",
+ problem:"在大型客户中，治理高度分散，权限粒度极细。在原始数据层面，只有生产环境的访问权限。代码可以完全一致、编排定义得很好，但权限不允许在不同环境中复现相同的数据范围。相关的另一个问题是：看板应该发布在哪个环境？数据实际能在哪里访问，谁能看到什么，应该暴露哪个事实来源？",
+ approach:["接受在现有权限模型下，完美的环境抽象无法实现。","把选择讲清楚：哪个环境读取哪些数据，以及原因。","把这些选择体现在配置和文档里，让下一个人能理解。"],
+ principles:[["治理体现在权限上，不只在代码里","谁能读什么，和数据模型一样塑造着架构。"],["明确胜过优雅","有文档的折中方案，比一个和现实悄悄不一致的理想设计误会更少。"],["有意识地选择发布环境","看板放在哪里，决定了看的人看到的是哪个「真相」。"]]},
+fr:{title:"Environnements et accès dans les grands comptes : être explicite plutôt que parfait",
+ tldr:"Séparer proprement dev et prod est la règle, mais des accès très fins et silotés peuvent la rendre impossible. Reconnaître la contrainte et documenter le choix.",
+ context:"En théorie, les bonnes pratiques sont claires : séparer proprement les environnements dev et prod, avec des accès distincts, pour garantir qualité et sécurité.",
+ problem:"Dans les grands comptes, la gouvernance est très silotée et la granularité des accès très fine. Sur les données brutes, seul l'accès production était disponible. Le code pouvait être identique et l'orchestration bien définie, mais les droits ne permettaient pas le même périmètre de données entre environnements. Autre question liée : dans quel environnement publier un dashboard ? Où la donnée est-elle réellement accessible, qui voit quoi, quelle source de vérité exposer ?",
+ approach:["Accepter qu'une abstraction parfaite des environnements n'était pas atteignable avec ce modèle d'accès.","Rendre les choix explicites : quel environnement lit quelles données, et pourquoi.","Les refléter clairement dans la configuration et la documentation pour l'équipe suivante."],
+ principles:[["La gouvernance se joue aussi dans les accès","Qui peut lire quoi façonne l'architecture autant que le modèle."],["Explicite vaut mieux qu'élégant","Un compromis documenté crée moins de malentendus qu'un design idéal qui diverge en silence."],["Choisir l'environnement de publication à dessein","L'endroit où vit un dashboard décide de la vérité que voient ses lecteurs."]]}},
+
+/* L. Uber part 3 (04-14) */
+"7449697987615920128":{domain:"semantic",also:["business"],series:"uber",stack:["Looker Studio","BigQuery"],concepts:["metricDef","doc","xfunc"],
+en:{title:"Uber pipeline, part 3: the “Total Revenue” definition war",
+ tldr:"A dashboard card called Total Revenue means gross for Finance, net for Operations and base fare for Marketing. Put the formula on the card and let users switch views.",
+ context:"Last part of my review of a public GCP data engineering project built on the Uber / NYC TLC dataset. The Looker Studio dashboard follows a classic hierarchy: filters (vendor, rate code) powered by the star schema, headline KPIs (Total Revenue $1.5M, average trip distance) and a demand heatmap.",
+ problem:"The hardest part is not the visual, it is the metric definition. Finance reads Total Revenue as gross (everything collected); Operations needs net (without tolls, taxes and surcharges) to measure performance; Marketing may ignore surcharges and focus on the base fare. Different mental formulas behind one card turn the dashboard into a source of confusion.",
+ approach:["Embed definitions: an information tooltip on the card states the exact formula.","Add a switcher so each department can toggle between gross and net.","Add time intelligence (period-over-period trends) to move from reporting what happened towards anticipating what comes next."],
+ principles:[["One label, one formula","If a KPI can be read several ways, the formula has to be visible where the number is."],["Design for each audience","Letting users pick the variant they need beats arguing over a single number."],["Engineering is a refinery","The job is to deliver unambiguous figures for decisions, not just to move bytes."]]},
+zh:{title:"Uber 管道（第三部分）：「总收入」的定义之争",
+ tldr:"同一张「总收入」卡片，财务看的是总额，运营要的是净额，市场关注基础车费。把公式放在卡片上，并允许用户切换视角。",
+ context:"这是我对一个基于 Uber / 纽约 TLC 数据集的公开 GCP 数据工程项目的最后一部分复盘。Looker Studio 看板采用经典层次：由星型模型支撑的筛选器（供应商、费率代码）、核心 KPI（总收入 150 万美元、平均行程距离），以及需求热力图。",
+ problem:"最难的不是可视化，而是指标定义。财务把总收入理解为总额（收到的全部）；运营需要净额（扣除过路费、税费和附加费）来衡量表现；市场可能忽略附加费，只看基础车费。一张卡片背后是不同的心算公式，看板就从对齐工具变成了困惑之源。",
+ approach:["嵌入定义：在卡片上加信息提示，写明确切公式。","加一个切换器，让各部门在总额和净额之间切换。","加入时间智能（环比趋势），从「报告发生了什么」走向「预判接下来会怎样」。"],
+ principles:[["一个名称，一个公式","如果一个 KPI 能被多种理解，公式就必须出现在数字旁边。"],["为每类受众设计","让用户选择自己需要的口径，胜过围绕一个数字争论。"],["数据工程是一座炼油厂","我们的工作是为决策交付无歧义的数字，而不只是搬运字节。"]]},
+fr:{title:"Pipeline Uber, partie 3 : la guerre des définitions du « Total Revenue »",
+ tldr:"Une carte « Total Revenue » signifie brut pour la Finance, net pour les Opérations, tarif de base pour le Marketing. Afficher la formule sur la carte et laisser l'utilisateur basculer.",
+ context:"Dernière partie de ma revue d'un projet public de data engineering sur GCP basé sur le dataset Uber / NYC TLC. Le dashboard Looker Studio suit une hiérarchie classique : filtres (vendor, rate code) portés par le schéma en étoile, KPI clés (Total Revenue 1,5 M$, distance moyenne) et heatmap de la demande.",
+ problem:"Le plus difficile n'est pas le visuel mais la définition. La Finance lit le Total Revenue en brut (tout l'encaissé) ; les Opérations ont besoin du net (hors péages, taxes, suppléments) ; le Marketing ignore parfois les suppléments pour regarder le tarif de base. Des formules mentales différentes derrière une même carte font du dashboard une source de confusion.",
+ approach:["Intégrer les définitions : une info-bulle (i) sur la carte donne la formule exacte.","Ajouter un sélecteur pour basculer entre brut et net selon le département.","Ajouter de la Time Intelligence (tendances période sur période) pour passer du constat à l'anticipation."],
+ principles:[["Un libellé, une formule","Si un KPI peut se lire de plusieurs façons, la formule doit être visible à côté du chiffre."],["Concevoir pour chaque public","Laisser choisir la variante utile vaut mieux que débattre d'un chiffre unique."],["L'ingénierie est une raffinerie","Livrer des chiffres sans ambiguïté pour décider, pas seulement déplacer des octets."]]}},
+
+/* M. Uber part 2 (04-07) */
+"7447161373740048384":{domain:"modeling",also:["semantic"],series:"uber",fig:"star",stack:["BigQuery","Looker","Mage AI"],concepts:["star","fanout","modular"],
+en:{title:"Uber pipeline, part 2: why split a wide table into a star schema",
+ tldr:"Separating metrics (fact) from descriptions and rules (dimensions) reduces redundancy, keeps the semantic layer simple, and mirrors how billing engines separate transactions from pricing rules.",
+ context:"Part 2 of the review of a public Uber ETL project on GCP, focused on data modelling. The raw trip data arrives as one wide table.",
+ problem:"Why bother decomposing it into fact and dimension tables instead of querying the wide table directly?",
+ approach:["Isolate core metrics (fare, distance, tips) in a central fact table, linked to dimensions (datetime, location, rate code). Less redundancy, a better organised warehouse.","Use the star schema as the base for Looker: simpler joins, no fan-out, symmetric aggregates working as intended, leaner LookML, and fast dashboards because heavy logic is done upstream in BigQuery.","Note the transfer to finance: modelling rate codes (standard, JFK, negotiated) apart from trip metrics is the same pattern as interchange fees or multi-party splits in fintech, where separating transaction metrics from pricing rules gives consistency and auditability."],
+ principles:[["Move complexity upstream","A solid model makes every downstream query simpler and faster."],["Separate facts from rules","Keeping metrics and pricing logic apart makes reconciliation possible."],["Model for the semantic layer","A clean star schema is what lets a BI layer stay small and correct."]]},
+zh:{title:"Uber 管道（第二部分）：为什么要把宽表拆成星型模型",
+ tldr:"把度量（事实表）和描述、规则（维度表）分开，能减少冗余、让语义层保持简洁，也正对应计费引擎把交易与定价规则分离的做法。",
+ context:"对一个公开的 GCP 上 Uber ETL 项目的复盘第二部分，聚焦数据建模。原始行程数据是一张宽表。",
+ problem:"为什么要费劲把它拆成事实表和维度表，而不是直接查询宽表？",
+ approach:["把核心度量（车费、距离、小费）放进中心事实表，再关联维度（时间、地点、费率代码）。冗余更少，数仓更有条理。","以星型模型作为 Looker 的基础：关联更简单、没有扇出、对称聚合按预期工作、LookML 更精简；重逻辑在 BigQuery 上游完成，看板几秒就能加载。","迁移到金融场景：把费率代码（标准、JFK、协商价）与行程度量分开建模，和金融科技里的交换费、多方分账是同一模式——交易度量与定价规则分离，带来一致性与可审计性。"],
+ principles:[["把复杂度移到上游","扎实的模型让下游每一条查询更简单、更快。"],["事实与规则分离","度量和定价逻辑分开，对账才有可能。"],["为语义层建模","干净的星型模型，才能让 BI 层保持小而正确。"]]},
+fr:{title:"Pipeline Uber, partie 2 : pourquoi éclater une table large en schéma en étoile",
+ tldr:"Séparer les métriques (fait) des descriptions et règles (dimensions) réduit la redondance, simplifie la couche sémantique et reproduit la logique des moteurs de facturation qui séparent transactions et règles tarifaires.",
+ context:"Partie 2 de la revue d'un projet ETL Uber public sur GCP, centrée sur la modélisation. Les trajets bruts arrivent dans une seule table large.",
+ problem:"Pourquoi se donner la peine de la décomposer en tables de faits et de dimensions plutôt que d'interroger directement la table large ?",
+ approach:["Isoler les métriques clés (tarif, distance, pourboires) dans une table de faits centrale, reliée à des dimensions (date, lieu, rate code). Moins de redondance, un entrepôt mieux organisé.","S'appuyer sur l'étoile pour Looker : jointures simples, pas de fan-out, Symmetric Aggregates qui fonctionnent, LookML allégé, dashboards rapides car la logique lourde est faite en amont dans BigQuery.","Transposer à la finance : modéliser les rate codes (standard, JFK, négocié) à part des métriques de trajet, c'est le pattern des interchange fees ou des splits multi-parties en fintech, où séparer métriques et règles de prix garantit cohérence et auditabilité."],
+ principles:[["Déplacer la complexité en amont","Un modèle solide rend chaque requête aval plus simple et plus rapide."],["Séparer les faits des règles","Isoler métriques et logique tarifaire rend la réconciliation possible."],["Modéliser pour la couche sémantique","Une étoile propre permet à la couche BI de rester légère et juste."]]}},
+
+/* N. Uber part 1 (03-31) */
+"7444624664456318976":{domain:"orchestration",also:["modeling"],series:"uber",fig:"uberflow",stack:["GCS","Mage AI","Compute Engine","BigQuery","Looker Studio"],concepts:["modular","orchestrator"],
+en:{title:"Uber pipeline, part 1: from spaghetti scripts to modular blocks",
+ tldr:"A public GCP project shows a clean pipeline flow (GCS → Mage → BigQuery → Looker Studio) and how block-level orchestration makes logic reusable and errors easy to isolate.",
+ context:"Inspired by an internal workshop on script modularisation, I deconstructed a public Uber ETL project on GCP. It illustrates how to move from “spaghetti scripts” to a maintainable architecture.",
+ problem:"Monolithic scripts mix ingestion, business logic and loading. When something fails, the whole script has to be read and rerun to find where.",
+ approach:["Follow the flow: raw NYC taxi data lands in GCS (data lake, persistence and auditability); Mage AI on a GCP VM orchestrates; cleaned data loads into fact and dimension tables in BigQuery for Looker Studio.","Use Mage's block architecture: data loaders only ingest, transformers hold the business logic (decoupled and reusable), exporters push to BigQuery, and built-in tests validate schema and quality in each block.","Debug at block level in the interactive UI: immediate feedback per block isolates errors faster than a CLI run."],
+ principles:[["One block, one responsibility","Separating load, transform and export makes each part testable and reusable."],["Test inside the pipeline","Schema and quality checks belong in each step, not only at the end."],["Size the infrastructure to the volume","This setup suits medium datasets; enterprise traffic needs more distributed compute."]]},
+zh:{title:"Uber 管道（第一部分）：从「面条脚本」到模块化积木",
+ tldr:"一个公开的 GCP 项目展示了清晰的管道流程（GCS → Mage → BigQuery → Looker Studio），以及按块编排如何让逻辑可复用、错误易定位。",
+ context:"受一次关于脚本模块化的内部工作坊启发，我拆解了一个公开的 GCP 上的 Uber ETL 项目。它很好地展示了如何从「面条式脚本」走向可维护的架构。",
+ problem:"单体脚本把采集、业务逻辑和加载混在一起。出了问题，只能把整段脚本读一遍、重跑一遍才能找到位置。",
+ approach:["理清流程：纽约出租车原始数据落到 GCS（数据湖，用于留存和审计）；在 GCP 虚拟机上运行的 Mage AI 负责编排；清洗后的数据以事实表和维度表加载进 BigQuery，供 Looker Studio 分析。","采用 Mage 的块架构：加载块只负责采集，转换块承载业务逻辑（解耦、可复用），导出块写入 BigQuery，内置测试在每个块里校验结构和质量。","在交互式界面里按块调试：每个块即时反馈，比命令行更快定位错误。"],
+ principles:[["一个块，一个职责","把加载、转换、导出分开，每部分都可测试、可复用。"],["在管道内部做测试","结构和质量检查应放在每一步，而不只是最后。"],["基础设施要匹配数据量","这种架构适合中等规模数据；企业级流量需要更分布式的计算。"]]},
+fr:{title:"Pipeline Uber, partie 1 : des scripts spaghetti aux blocs modulaires",
+ tldr:"Un projet GCP public montre un flux propre (GCS → Mage → BigQuery → Looker Studio) et comment une orchestration par blocs rend la logique réutilisable et les erreurs faciles à isoler.",
+ context:"Inspiré par un atelier interne sur la modularisation des scripts, j'ai déconstruit un projet ETL Uber public sur GCP. Il illustre le passage de « scripts spaghetti » à une architecture maintenable.",
+ problem:"Un script monolithique mélange ingestion, logique métier et chargement. En cas d'échec, il faut relire et relancer tout le script pour trouver où.",
+ approach:["Suivre le flux : les données taxis NYC brutes arrivent dans GCS (Data Lake, persistance et auditabilité) ; Mage AI sur une VM GCP orchestre ; les données nettoyées sont chargées en tables de faits et dimensions dans BigQuery pour Looker Studio.","Utiliser l'architecture en blocs de Mage : les loaders ne font que l'ingestion, les transformers portent la logique métier (découplée, réutilisable), les exporters poussent vers BigQuery, et des tests intégrés valident schéma et qualité dans chaque bloc.","Déboguer bloc par bloc dans l'interface : le retour immédiat isole les erreurs plus vite qu'une exécution en CLI."],
+ principles:[["Un bloc, une responsabilité","Séparer chargement, transformation et export rend chaque partie testable et réutilisable."],["Tester dans le pipeline","Les contrôles de schéma et de qualité ont leur place à chaque étape, pas seulement à la fin."],["Dimensionner l'infra selon le volume","Ce montage convient à des volumes moyens ; un trafic d'entreprise demande un calcul plus distribué."]]}}
+});
+Object.assign(NOTES,{
+/* O. Target analytics article (03-23) */
+"7441762454910595072":{domain:"business",also:["semantic"],series:"targets",article:"https://medium.com/@gabrielluz1564/engineering-ambition-a-practical-guide-to-robust-target-analytics-4f610920bdc2",stack:["dbt","BigQuery","Airflow","Looker","Hightouch"],concepts:["targets","fanout","joins","versioning"],
+en:{title:"Actuals vs targets end to end: a five-phase framework",
+ tldr:"“Just join actuals and targets” hides five separate problems: ingestion, shape and grain, join logic, visualisation, and acting on the gap. Each phase has its own trap.",
+ context:"Comparing real performance with strategic targets is one of the most common requests a data team receives. On the surface it is a subtraction. In production it is where double counting flourishes and trust in data breaks.",
+ problem:"The two sides differ in every way: actuals come from reliable systems, targets from spreadsheets; the shapes differ (wide budgets vs long transactions); the grains differ (daily vs monthly); and the business question behind the dashboard is rarely made explicit.",
+ approach:["Phase 1, ingest: partition actuals by time; version static targets with dbt seed; sync living targets with checks on file structure; snapshot the target table monthly for time travel.","Phase 2, integrate: UNPIVOT monthly columns into rows; handle the daily-vs-monthly fan-out with ROW_NUMBER() in SQL (fragile) or, more robustly, symmetric aggregates in Looker.","Phase 3, align: LEFT JOIN for an active-execution view, FULL OUTER JOIN for a strategic view that exposes planned-but-missing items.","Phase 4, visualise: colour-coded scorecards (e.g. green above 90%, red below 80%), actuals against a linear target line, and drill-down to find the bottleneck.","Phase 5, act: conditional alerts (e.g. notify the manager if the gap exceeds 20% by the 15th) and reverse ETL (e.g. Hightouch) to push the target gap back into the CRM."],
+ principles:[["A “simple” request can hide a pipeline","Break it into phases and look for the trap in each one."],["Trust is the real deliverable","Versioned targets and correct grain matter more than the chart."],["Close the loop","An insight that reaches the tool people work in gets acted on."]]},
+zh:{title:"实际 vs 目标全流程：五阶段框架",
+ tldr:"「把实际和目标关联一下」背后藏着五个独立问题：采集、形状与粒度、关联逻辑、可视化、以及如何对差距采取行动。每个阶段都有自己的陷阱。",
+ context:"把实际表现和战略目标做对比，是数据团队最常收到的需求之一。表面上只是一个减法，在生产环境里却是重复计算泛滥、数据信任破裂的地方。",
+ problem:"两边处处不同：实际数据来自可靠系统，目标来自表格；形状不同（宽格式预算 vs 长格式交易）；粒度不同（按天 vs 按月）；而看板背后的业务问题很少被讲明白。",
+ approach:["第一阶段，采集：实际数据按时间分区；静态目标用 dbt seed 版本化；动态目标同步时检查文件结构；每月给目标表做快照以便回溯。","第二阶段，整合：用 UNPIVOT 把月份列转成行；处理日 vs 月的扇出，可在 SQL 里用 ROW_NUMBER()（脆弱），更稳健的是 Looker 的对称聚合。","第三阶段，对齐：执行类视图用 LEFT JOIN，战略类视图用 FULL OUTER JOIN，暴露「计划了却缺失」的项目。","第四阶段，可视化：彩色记分卡（如 90% 以上绿、80% 以下红），实际值对比线性目标线，并支持下钻找瓶颈。","第五阶段，行动：条件告警（如到 15 号差距超过 20% 就通知经理），以及反向 ETL（如 Hightouch）把目标差距推回 CRM。"],
+ principles:[["「简单」需求背后可能是一整条管道","拆成阶段，逐一找出每个阶段的陷阱。"],["真正的交付物是信任","目标版本化和粒度正确，比图表本身更重要。"],["形成闭环","能出现在人们日常工具里的洞察，才会被执行。"]]},
+fr:{title:"Réel vs objectifs de bout en bout : un cadre en cinq phases",
+ tldr:"« Il suffit de joindre réel et objectifs » cache cinq problèmes distincts : ingestion, forme et grain, logique de jointure, visualisation, et action sur l'écart. Chaque phase a son piège.",
+ context:"Comparer la performance réelle aux objectifs stratégiques est l'une des demandes les plus fréquentes. En surface, une soustraction. En production, c'est là que prospèrent les doubles comptages et que la confiance se casse.",
+ problem:"Les deux côtés diffèrent en tout : le réalisé vient de systèmes fiables, les objectifs de tableurs ; les formes diffèrent (budget « wide » vs transactions « long ») ; les grains aussi (jour vs mois) ; et la question métier derrière le dashboard est rarement explicite.",
+ approach:["Phase 1, ingérer : partitionner le réalisé par date ; versionner les objectifs statiques avec dbt seed ; synchroniser les objectifs vivants avec contrôle de structure ; snapshotter la table d'objectifs chaque mois pour le time travel.","Phase 2, intégrer : UNPIVOT des colonnes mensuelles ; gérer le fan-out jour / mois avec ROW_NUMBER() en SQL (fragile) ou, plus robuste, les Symmetric Aggregates de Looker.","Phase 3, aligner : LEFT JOIN pour une vue d'exécution, FULL OUTER JOIN pour une vue stratégique qui expose ce qui était prévu mais absent.","Phase 4, visualiser : scorecards colorées (ex. vert au-dessus de 90 %, rouge sous 80 %), réel face à une ligne d'objectif linéaire, et drill-down pour trouver le goulot.","Phase 5, agir : alertes conditionnelles (ex. prévenir le manager si l'écart dépasse 20 % au 15 du mois) et reverse ETL (ex. Hightouch) pour renvoyer l'écart dans le CRM."],
+ principles:[["Une demande « simple » peut cacher un pipeline","La découper en phases et chercher le piège de chacune."],["Le vrai livrable, c'est la confiance","Des objectifs versionnés et un grain juste comptent plus que le graphique."],["Boucler la boucle","Une information qui arrive dans l'outil de travail est suivie d'action."]]}},
+
+/* P. Looker vs Looker Studio (03-12) */
+"7437741724082434048":{domain:"semantic",also:[],series:"looker",article:"https://medium.com/@gabrielluz1564/the-data-practitioners-odyssey-looker-and-looker-studio-more-than-just-twins-e89ccb22fe92",stack:["Looker","Looker Studio","GA4","Google Ads","Google Sheets"],concepts:["toolchoice","ssot","access","selfservice"],
+en:{title:"Looker or Looker Studio? Two tools, not two editions",
+ tldr:"Looker is the architect: logic as code, Git, roles and governed drill-downs. Looker Studio is the painter: fast, visual, marketing-friendly, but prone to data islands. Pick by the job, not the name.",
+ context:"“Which Looker should we use?” comes up often. Many people assume Looker Studio is a lite version of Looker. They share a name, but they were built for different needs: Looker is a native enterprise data platform; Looker Studio (formerly Google Data Studio) serves rapid, ad-hoc visualisation.",
+ problem:"Choosing the wrong one has a cost. Using Studio as an enterprise foundation leads to logic hard-coded in individual reports, unclear ownership and inconsistent numbers. Using Looker for quick marketing reporting adds modelling effort where speed was the need.",
+ approach:["Looker: business logic in LookML with native Git, a central semantic layer as single source of truth, role-based access (viewer, editor, owner…) and drill-downs that stay governed at every level.","Looker Studio: native connectors to GA4, Google Ads and Sheets, intuitive drag-and-drop styling, quick period comparisons (N-1) and near-zero entry barrier.","Know Studio's limits: open access makes it hard to track who builds what; logic scattered across reports creates data islands; edits can fail to save or show different versions to colleagues."],
+ principles:[["Foundation vs instant value","Build enterprise assets on governed tooling; use agile tools for fast, local answers."],["Governance has to live somewhere","Without a central layer, each report carries its own version of the rules."],["Match the tool to the user","Marketers needing speed and analysts needing a single truth have different requirements."]]},
+zh:{title:"Looker 还是 Looker Studio？两个工具，而不是两个版本",
+ tldr:"Looker 是「建筑师」：逻辑即代码、Git、角色权限、受治理的下钻。Looker Studio 是「画家」：快速、直观、对市场团队友好，但容易形成数据孤岛。按任务选，而不是按名字选。",
+ context:"「我们该用哪个 Looker？」这个问题常被问到。很多人以为 Looker Studio 是 Looker 的精简版。它们名字相同，却为不同需求而生：Looker 是原生的企业级数据平台；Looker Studio（前身 Google Data Studio）服务于快速、临时的可视化。",
+ problem:"选错是有代价的。把 Studio 当企业基础，逻辑会硬编码在各个报表里，归属不清，数字不一致。用 Looker 做快速的营销报表，则在需要速度的地方增加了建模成本。",
+ approach:["Looker：业务逻辑写在 LookML 里，原生支持 Git；中心语义层作为唯一事实来源；基于角色的权限（查看者、编辑者、所有者等）；每一层下钻都受治理。","Looker Studio：原生连接 GA4、Google Ads 和 Sheets，拖拽式样式直观，同比 / 环比（N-1）对比切换快，几乎零门槛。","了解 Studio 的局限：开放访问让人难以追踪谁在建什么；逻辑分散在各报表里形成数据孤岛；编辑有时保存失败，或同事看到不同版本。"],
+ principles:[["打地基 vs 即时价值","企业级资产建在受治理的工具上；快速、局部的问题用敏捷工具。"],["治理总要有个落脚点","没有中心层，每张报表都带着自己的一套规则。"],["工具要匹配用户","追求速度的市场人员和需要统一口径的分析师，需求不同。"]]},
+fr:{title:"Looker ou Looker Studio ? Deux outils, pas deux éditions",
+ tldr:"Looker est l'architecte : logique en code, Git, rôles, drill-down gouverné. Looker Studio est le peintre : rapide, visuel, taillé pour le marketing, mais propice aux îlots de données. Choisir selon le besoin, pas le nom.",
+ context:"« Quel Looker faut-il utiliser ? » revient souvent. Beaucoup pensent que Looker Studio est une version allégée de Looker. Ils partagent un nom mais répondent à des besoins différents : Looker est une plateforme data d'entreprise native ; Looker Studio (ex-Google Data Studio) sert la visualisation rapide et ad hoc.",
+ problem:"Se tromper coûte cher. Utiliser Studio comme fondation d'entreprise disperse la logique dans chaque rapport, brouille la responsabilité et crée des chiffres incohérents. Utiliser Looker pour un reporting marketing rapide ajoute de la modélisation là où il fallait de la vitesse.",
+ approach:["Looker : logique métier en LookML avec Git natif, couche sémantique centrale comme source unique de vérité, accès par rôles (viewer, editor, owner…) et drill-down gouverné à chaque niveau.","Looker Studio : connecteurs natifs GA4, Google Ads et Sheets, mise en forme intuitive par glisser-déposer, comparaisons N-1 rapides et barrière d'entrée quasi nulle.","Connaître les limites de Studio : l'accès ouvert rend difficile le suivi de qui construit quoi ; la logique éparpillée crée des îlots de données ; des modifications peuvent ne pas s'enregistrer ou apparaître différemment selon les collègues."],
+ principles:[["Fondation vs valeur immédiate","Bâtir les actifs d'entreprise sur un outil gouverné ; garder l'agile pour les réponses rapides et locales."],["La gouvernance doit vivre quelque part","Sans couche centrale, chaque rapport porte sa version des règles."],["Adapter l'outil à l'utilisateur","Le marketeur pressé et l'analyste en quête d'une vérité unique n'ont pas les mêmes besoins."]]}},
+
+/* Q. Recette (03-02) */
+"7434149629199282177":{domain:"business",also:[],article:"https://medium.com/@gabrielluz1564/why-your-numbers-dont-match-the-client-s-48cf0fe7d0fe",stack:["SQL","Shopify / CRM / ERP","BI"],concepts:["recon","metricDef","fanout","filter"],
+en:{title:"Why your numbers don't match the client's: a reconciliation checklist",
+ tldr:"“Your total is off” usually comes from a different date, a different definition, a hidden filter or a sync gap, not from bad SQL. Check them in order, and trace a few real orders.",
+ context:"Each first quarter is audit season: companies review last year's performance. You deliver a dashboard with clean SQL and sound logic, then the client compares it with an internal report and says the total is off. In France this reconciliation phase is called la recette, and it is rarely taught.",
+ problem:"Reconciliation is detective work: messy exports, sync delays and inconsistent business logic. Without a method, teams lose days arguing about whose number is right.",
+ approach:["Agree on the reference date: order, invoice, shipping or accounting date. January sales by invoice and by shipping will never match.","Build a KPI dictionary: net vs gross, VAT, promo codes at line or order level, bundles as one unit or several. For platforms like Shopify, read the developer docs (e.g. total_sales includes returns and shipping, gross_sales does not).","Exclude inter-company flows: internal transfers between warehouses or subsidiaries often get order numbers but are not sales.","Check hidden filters and sync: make sure the starting population matches; when it still differs, compare a few mismatched IDs between your warehouse and the client's app.","Trace 3–5 orders by hand against the source app, including messy cases (partial returns, several discounts, split shipments), on a frozen period such as the previous full month.","Before touching SQL, snapshot the correct numbers; a changed JOIN type or an extra GROUP BY column can fan out or drop rows."],
+ principles:[["20% SQL, 80% communication","Most gaps come from different assumptions, not from code."],["Reconciliation drives governance","A “wrong” number often points to missing master data or documentation at the source."],["Trust is the final KPI","Bridging technical reality and business perception is the actual deliverable."]]},
+zh:{title:"为什么你的数字和客户的对不上：一份核对清单",
+ tldr:"「你的总数不对」通常源于不同的日期、不同的定义、隐藏的筛选或同步延迟，而不是 SQL 写错了。按顺序检查，并手工追踪几笔真实订单。",
+ context:"每年第一季度都是「审计季」：企业复盘上一年的业绩。你交付了 SQL 干净、逻辑严谨的看板，客户拿它和内部报表一比，说总数不对。在法国，这个核对阶段叫 la recette，学校里很少教。",
+ problem:"核对是侦探工作：混乱的导出、同步延迟、不一致的业务逻辑。没有方法，团队会花好几天争论谁的数字是对的。",
+ approach:["先统一参考日期：下单日、开票日、发货日还是记账日。按开票和按发货统计的一月销售永远对不上。","建立 KPI 词典：净额还是总额、是否含增值税、折扣按行还是按单扣、套装算一件还是多件。像 Shopify 这样的平台，要读开发者文档（例如 total_sales 含退货和运费，gross_sales 不含）。","排除内部往来：仓库或子公司之间的内部调拨常常也有订单号，但不是销售。","检查隐藏筛选和同步：确认起始数据范围一致；仍有差异时，挑几笔不一致的 ID，比较你的数仓和客户系统里的状态。","手工追踪 3–5 笔订单，对照源系统界面，包括复杂情况（部分退货、多重折扣、分批发货），并使用冻结的时间窗口（如上一个完整月）。","改 SQL 之前先给正确数字做快照；JOIN 类型的改动或 GROUP BY 多一列，都可能造成扇出或丢行。"],
+ principles:[["20% 靠 SQL，80% 靠沟通","大多数差异来自不同的假设，而不是代码。"],["核对推动治理","「错误」的数字往往指向源头缺失的主数据或文档。"],["信任是最终的 KPI","弥合技术现实与业务感知，才是真正的交付物。"]]},
+fr:{title:"Pourquoi vos chiffres ne collent pas à ceux du client : une checklist de recette",
+ tldr:"« Votre total est faux » vient en général d'une autre date, d'une autre définition, d'un filtre caché ou d'un décalage de synchronisation, pas d'un mauvais SQL. Vérifier dans l'ordre, et tracer quelques commandes réelles.",
+ context:"Chaque premier trimestre, c'est la saison des audits : les entreprises revoient l'année écoulée. Vous livrez un dashboard au SQL propre, le client le compare à son rapport interne et dit que le total est faux. La recette, rarement enseignée à l'école.",
+ problem:"La recette est un travail de détective : exports désordonnés, retards de synchronisation, logique métier incohérente. Sans méthode, on perd des jours à débattre de qui a le bon chiffre.",
+ approach:["S'accorder sur la date de référence : commande, facture, expédition ou écriture comptable. Les ventes de janvier par facture et par expédition ne coïncideront jamais.","Construire un dictionnaire de KPI : net ou brut, TVA, remises à la ligne ou à la commande, packs comptés comme une ou plusieurs unités. Sur Shopify, lire la doc développeur (ex. total_sales inclut retours et frais de port, gross_sales non).","Exclure les flux intra-groupe : les transferts entre entrepôts ou filiales ont souvent un numéro de commande sans être des ventes.","Vérifier filtres cachés et synchronisation : s'assurer que la population de départ est la même ; en cas d'écart, comparer quelques IDs entre l'entrepôt de données et l'application du client.","Tracer 3 à 5 commandes à la main dans l'application source, y compris des cas complexes (retours partiels, remises multiples, expéditions fractionnées), sur une période figée comme le dernier mois complet.","Avant de toucher au SQL, figer les bons chiffres ; un changement de JOIN ou une colonne de plus dans le GROUP BY peut dupliquer ou perdre des lignes."],
+ principles:[["20 % de SQL, 80 % de communication","La plupart des écarts viennent d'hypothèses différentes, pas du code."],["La recette nourrit la gouvernance","Un chiffre « faux » révèle souvent des données de référence ou une documentation manquantes à la source."],["La confiance est le KPI final","Rapprocher réalité technique et perception métier, c'est le vrai livrable."]]}},
+
+/* R. SQL chaos to Data Zen (02-18) */
+"7429985750319915008":{domain:"semantic",also:[],series:"looker",article:"https://medium.com/@gabrielluz1564/from-sql-chaos-to-data-zen-how-looker-restored-my-sanity-as-a-developer-647a8957ee2c",stack:["Looker","LookML","Git"],concepts:["declarative","grain","ssot","drill","git"],
+en:{title:"From SQL chaos to Data Zen: six developer pains a semantic layer removes",
+ tldr:"Declaring what the data is, instead of scripting how to transform it, removed six recurring pains: grain changes, cryptic column names, duplicated metrics, slow debugging, risky edits and rigid filters.",
+ context:"After writing about Looker's user-facing features, I looked at it from the developer's side: the pains of traditional dashboard development, and what changed once I worked on a semantic layer.",
+ problem:"Traditional SQL workflows create “perpetual firefighting”: one extra column can break downstream tables or change the grain; cryptic technical names need constant re-mapping; the same logic is rewritten for every request; a challenged number means reverse-engineering several SQL steps; collaborative edits can overwrite work; and making one KPI ignore a filter takes SQL hacks.",
+ approach:["Grain: the semantic layer acts as one virtual big table; Looker generates SQL per question, so adding a field never means rewriting a GROUP BY.","Language: label technical columns once with business-friendly names to build a shared dictionary.","Single source of truth: define a metric once in LookML; a change propagates to every dashboard.","Debugging: drill down to the raw rows behind a value and see which filters were active.","Safety: native Git integration to branch, review and revert.","Filters: choose which tiles and measures listen to which filter, so a static total can sit next to a filtered trend."],
+ principles:[["Declare, don't script","Describing what data is scales better than procedural transformation code."],["Shared vocabulary prevents errors","Most misunderstandings between developers and business users are naming problems."],["Make the engine generate the SQL","Hand-written aggregation per request is where grain and fan-out bugs come from."]]},
+zh:{title:"从 SQL 混乱到「数据禅」：语义层帮开发者消除的六个痛点",
+ tldr:"从编写「如何转换」转向声明「数据是什么」，消除了六个反复出现的痛点：粒度变化、晦涩的字段名、重复的指标、缓慢的排查、高风险的编辑，以及僵硬的筛选器。",
+ context:"写完 Looker 面向用户的功能后，我换到开发者视角：传统看板开发的痛点有哪些，转到语义层后又改变了什么。",
+ problem:"传统 SQL 工作流让人「永远在救火」：多加一列可能破坏下游表或改变粒度；晦涩的技术字段名需要反复映射；同样的逻辑每个需求重写一遍；一个数字被质疑，就要逆向推几层 SQL；多人协作的编辑可能覆盖彼此的成果；让某个 KPI 不受筛选影响，需要 SQL 小技巧。",
+ approach:["粒度：语义层像一张虚拟的大宽表；Looker 按问题动态生成 SQL，加字段永远不需要改 GROUP BY。","语言：给技术字段一次性标上业务名称，形成共享词典。","唯一事实来源：指标在 LookML 中只定义一次，改动会传播到所有看板。","排查：下钻到数值背后的原始行，并看到当时生效的筛选条件。","安全：原生 Git 集成，可以分支、评审、回滚。","筛选：指定哪些图块和度量响应哪个筛选器，让静态总计和筛选后的趋势并存。"],
+ principles:[["声明，而不是编写过程","描述数据是什么，比过程式转换代码更易扩展。"],["共享词汇能防止错误","开发与业务之间的误解，大多是命名问题。"],["让引擎生成 SQL","每个需求手写聚合，正是粒度和扇出 bug 的来源。"]]},
+fr:{title:"Du chaos SQL au « Data Zen » : six douleurs de développeur qu'une couche sémantique supprime",
+ tldr:"Déclarer ce qu'est la donnée plutôt que scripter comment la transformer a supprimé six douleurs récurrentes : changements de grain, noms de colonnes obscurs, métriques dupliquées, débogage lent, modifications risquées et filtres rigides.",
+ context:"Après les fonctionnalités côté utilisateur, j'ai regardé Looker du point de vue du développeur : les douleurs du développement de dashboards traditionnel, et ce qui a changé avec une couche sémantique.",
+ problem:"Le flux SQL traditionnel crée un « pompier permanent » : une colonne de plus peut casser des tables aval ou changer le grain ; les noms techniques obscurs demandent un mapping constant ; la même logique est réécrite à chaque demande ; un chiffre contesté oblige à remonter plusieurs étapes SQL ; les éditions collaboratives peuvent écraser le travail ; et faire ignorer un filtre à un KPI demande des astuces SQL.",
+ approach:["Grain : la couche sémantique agit comme une grande table virtuelle ; Looker génère le SQL par question, ajouter un champ ne demande jamais de réécrire un GROUP BY.","Langage : nommer une fois les colonnes techniques en termes métier pour créer un dictionnaire partagé.","Source unique de vérité : une métrique définie une fois en LookML se propage à tous les dashboards.","Débogage : drill-down vers les lignes brutes derrière une valeur, avec les filtres actifs visibles.","Sécurité : intégration Git native pour brancher, relire et revenir en arrière.","Filtres : choisir quelles tuiles et mesures écoutent quel filtre, pour qu'un total fixe côtoie une tendance filtrée."],
+ principles:[["Déclarer plutôt que scripter","Décrire ce qu'est la donnée passe mieux à l'échelle que du code procédural."],["Un vocabulaire partagé évite les erreurs","La plupart des malentendus entre dev et métier sont des problèmes de nommage."],["Laisser le moteur générer le SQL","L'agrégation écrite à la main à chaque demande est la source des bugs de grain et de fan-out."]]}},
+
+/* S. 3 Looker features (02-09) */
+"7426535365651361794":{domain:"semantic",also:[],series:"looker",article:"https://medium.com/@gabrielluz1564/beyond-the-surface-3-looker-features-that-solve-your-daily-visualization-headaches-cb894c8458eb",stack:["Looker"],concepts:["drill","selfservice","ssot"],
+en:{title:"Three Looker features for everyday dashboard pain",
+ tldr:"Drill-through answers “how was this calculated?”, per-tile filter control keeps benchmarks stable, and Explore lets users answer one-off questions without a new dashboard.",
+ context:"A semantic layer is the engine, but for most users the value shows in the interface. Many tools make a chart look good; the challenge is making it functional, transparent and flexible.",
+ problem:"Three recurring headaches: the black-box number nobody can explain without the developer; the all-or-nothing filter that changes every chart, including the ones meant to stay as a benchmark; and the dashboard built for days to answer a question the user needed once.",
+ approach:["Drill-through: click any data point to see the row-level data behind it. Developers get an instant audit; users get autonomy, and links can lead to external apps such as the CRM.","Granular filter control: choose which tiles a filter applies to (“Tiles to update”), for example a filtered region next to a static global average. Trade-off: the configuration needs discipline or troubleshooting gets hard.","Ad-hoc exploration: in Explore, users drag and drop fields, answer their question and export to CSV, keeping the dashboard estate clean."],
+ principles:[["Transparency builds trust","A number people can drill into is a number people stop disputing."],["Flexibility needs discipline","Fine-grained configuration is powerful and must be documented to stay maintainable."],["Not every question needs a dashboard","Self-service for one-off questions frees developers for architecture work."]]},
+zh:{title:"三个解决日常看板痛点的 Looker 功能",
+ tldr:"下钻回答「这个数是怎么算的」，按图块控制筛选让基准保持稳定，Explore 让用户不建新看板也能回答一次性问题。",
+ context:"语义层是引擎，但对大多数用户来说，价值体现在界面上。很多工具都能把图做得好看，难的是让它好用、透明、灵活。",
+ problem:"三个反复出现的痛点：没有开发就没人能解释的「黑盒」数字；一刀切的筛选器，连本应保持不变的基准图也跟着变；花几天做出来的看板，只是为了回答用户一次性的问题。",
+ approach:["下钻（Drill-through）：点击任意数据点，查看背后的明细行。开发者获得即时审计手段，用户获得自主权，还可以链接到 CRM 等外部应用。","细粒度筛选控制：指定筛选器作用于哪些图块（「Tiles to update」），例如筛选后的区域旁边放一个静态的全局平均值。代价是配置需要纪律，否则排查会很难。","临时探索：在 Explore 里，用户拖拽字段、得到答案并导出 CSV，看板环境保持整洁。"],
+ principles:[["透明带来信任","可以下钻的数字，人们就不再争论。"],["灵活需要纪律","细粒度配置很强大，必须有文档才能维护。"],["不是每个问题都需要看板","一次性问题交给自助分析，让开发者把时间留给架构。"]]},
+fr:{title:"Trois fonctionnalités Looker contre les maux quotidiens des dashboards",
+ tldr:"Le drill-through répond à « comment ce chiffre est-il calculé ? », le contrôle des filtres par tuile garde les références stables, et l'Explore répond aux questions ponctuelles sans nouveau dashboard.",
+ context:"La couche sémantique est le moteur, mais pour la plupart des utilisateurs la valeur se voit dans l'interface. Beaucoup d'outils font de jolis graphiques ; le défi est de les rendre fonctionnels, transparents et flexibles.",
+ problem:"Trois maux récurrents : le chiffre « boîte noire » que personne n'explique sans le développeur ; le filtre tout-ou-rien qui change chaque graphique, y compris ceux qui devaient rester une référence ; et le dashboard construit en plusieurs jours pour une question posée une seule fois.",
+ approach:["Drill-through : cliquer sur un point pour voir les lignes détaillées derrière. Audit instantané pour le développeur, autonomie pour l'utilisateur, avec des liens possibles vers des applications externes comme le CRM.","Contrôle fin des filtres : choisir les tuiles concernées par un filtre (« Tiles to update »), par exemple une région filtrée à côté d'une moyenne globale fixe. Contrepartie : une configuration qui demande de la rigueur.","Exploration ad hoc : dans l'Explore, l'utilisateur glisse-dépose ses champs, obtient sa réponse et exporte en CSV, sans encombrer l'espace des dashboards."],
+ principles:[["La transparence crée la confiance","Un chiffre qu'on peut explorer est un chiffre qu'on ne conteste plus."],["La flexibilité exige de la rigueur","Une configuration fine est puissante et doit être documentée."],["Toute question ne mérite pas un dashboard","Le libre-service pour le ponctuel libère du temps pour l'architecture."]]}},
+
+/* T. Beyond dashboards (02-02) */
+"7424003613808648192":{domain:"semantic",also:["platform"],series:"looker",fig:"lookml",article:"https://medium.com/@gabrielluz1564/beyond-dashboards-a-deep-dive-into-lookers-underlying-logic-ee308ab46e06",stack:["Looker","LookML","Git"],concepts:["ssot","git","envs","access","selfservice"],
+en:{title:"Beyond dashboards: how Looker's semantic layer is built",
+ tldr:"Views define dimensions and measures, Explores define joins once, Models bind them to a connection and audience. Add Git, dev / prod modes and roles, and business rules stop hiding inside single dashboards.",
+ context:"Teams often spend more time fixing dashboards than analysing them: updating the same metric in ten reports, debating whose number is right, rebuilding a dashboard for a simple ad-hoc question. These are signs of a maintenance trap.",
+ problem:"In traditional BI tools a formula is often hard-coded inside one dashboard for a one-off request. Without documentation, the reason disappears, and the next person inherits black-box logic that is hard to maintain or change.",
+ approach:["Views: atomic logic per table, with dimensions (the what) and measures (the how much), e.g. a total_revenue measure of type sum.","Explores: join views once so users never write SQL joins. Models: bind Explores to a database connection and decide who sees what.","Dashboards as code: everything is versioned in Git, business rules are reviewable, and changing total_revenue once updates every dashboard that uses it.","Development mode vs production mode: a private sandbox to change logic without breaking the truth users rely on.","Roles: developers build LookML, users explore and build their own dashboards without SQL, viewers consume and filter."],
+ principles:[["Rules belong in a shared layer","A rule hidden in one report becomes a legacy mystery for every new joiner."],["Separate experimenting from serving","A sandbox protects the version the business depends on."],["Shield users by role","Give each audience the level of power it needs, no more."]]},
+zh:{title:"超越看板：Looker 语义层是如何构建的",
+ tldr:"View 定义维度和度量，Explore 一次性定义关联，Model 把它们绑定到连接和受众。再加上 Git、开发 / 生产模式和角色权限，业务规则就不会再藏在某一个看板里。",
+ context:"团队常常花在修看板上的时间比分析还多：同一个指标要在十个报表里手工更新，开会争论谁的数字对，一个简单的临时问题也要开发重建整个看板。这些都是「维护陷阱」的征兆。",
+ problem:"在传统 BI 工具里，公式常常为了一次性需求被硬编码在某个看板里。没有文档，改动的原因就消失了，下一个接手的人继承的是难以维护的黑盒逻辑。",
+ approach:["View：按表定义原子逻辑，包括维度（是什么）和度量（有多少），例如类型为 sum 的 total_revenue。","Explore：一次性定义视图之间的关联，用户无需手写 SQL JOIN。Model：把 Explore 绑定到数据库连接，并决定谁能看到什么。","看板即代码：一切都在 Git 中版本化，业务规则可评审；修改一次 total_revenue，所有用到它的看板同步更新。","开发模式 vs 生产模式：私人沙箱里改逻辑，不会破坏业务依赖的「事实」。","角色：开发者编写 LookML，普通用户无需 SQL 即可探索并搭建自己的看板，查看者只能浏览和筛选。"],
+ principles:[["规则属于共享层","藏在某个报表里的规则，会成为每个新人眼中的历史谜团。"],["把试验和服务分开","沙箱保护业务所依赖的那个版本。"],["按角色屏蔽复杂度","给每类受众恰好够用的能力。"]]},
+fr:{title:"Au-delà des dashboards : comment est construite la couche sémantique de Looker",
+ tldr:"Les Views définissent dimensions et mesures, les Explores définissent les jointures une fois, les Models les relient à une connexion et à un public. Avec Git, les modes dev / prod et les rôles, les règles métier cessent de se cacher dans un seul dashboard.",
+ context:"Les équipes passent souvent plus de temps à réparer des dashboards qu'à les analyser : mettre à jour la même métrique dans dix rapports, débattre du « bon » chiffre, reconstruire un dashboard pour une simple question ad hoc. Ce sont les signes d'un piège de maintenance.",
+ problem:"Dans les outils BI traditionnels, une formule est souvent codée en dur dans un dashboard pour une demande ponctuelle. Sans documentation, la raison disparaît et le suivant hérite d'une logique boîte noire difficile à maintenir.",
+ approach:["Views : logique atomique par table, avec dimensions (le quoi) et mesures (le combien), par exemple une mesure total_revenue de type sum.","Explores : joindre les vues une fois pour que personne n'écrive de JOIN. Models : relier les Explores à une connexion et décider qui voit quoi.","Dashboards as code : tout est versionné dans Git, les règles sont relues, et modifier total_revenue une fois met à jour tous les dashboards qui l'utilisent.","Mode développement vs production : un bac à sable privé pour changer la logique sans casser la vérité utilisée par le métier.","Rôles : les développeurs écrivent le LookML, les utilisateurs explorent et créent leurs dashboards sans SQL, les viewers consultent et filtrent."],
+ principles:[["Les règles vivent dans une couche partagée","Une règle cachée dans un rapport devient un mystère pour chaque nouvel arrivant."],["Séparer l'expérimentation du service","Un bac à sable protège la version dont dépend le métier."],["Protéger l'utilisateur par son rôle","Donner à chaque public le pouvoir dont il a besoin, pas plus."]]}},
+
+/* U. First article (01-27) */
+"7422030713971191809":{domain:"semantic",also:["platform"],series:"looker",article:"https://medium.com/@gabrielluz1564/bridging-data-engineering-and-business-intelligence-the-strategic-role-of-the-looker-semantic-89c160932967",stack:["Looker","LookML","Git","GitLab CI/CD"],concepts:["ssot","git","metricDef"],
+en:{title:"The semantic layer as the bridge between data engineering and BI",
+ tldr:"The hard part is consistency, not scale. When “Revenue” is re-coded in every query and dashboard, each change becomes a manual audit. Define it once, as versioned code.",
+ context:"Across several organisations' pipelines and BI projects, the same challenge kept returning: business logic fragmented across disconnected queries, dbt models and dashboard settings. Few tools bring data development practices such as version control and governance into the visualisation workflow.",
+ problem:"Definitions like “Revenue” or “Active users” are hard-coded in many places. When a core metric changes, analysts have to find and update every report by hand: slow, error-prone, and corrosive to trust.",
+ approach:["Use the semantic layer as the bridge: physical tables become Views and Explores, dimensions and measures are defined once as code, and every department reads the same metrics.","Let Looker send optimised SQL to the warehouse instead of moving data, so the presentation layer stays current and governed.","Bring software practice to BI with Git: tracked and reviewed metric changes, development mode on branches, and CI/CD (e.g. GitLab) so only validated code reaches users."],
+ principles:[["Consistency is the real scaling problem","More data is manageable; more versions of the same metric are not."],["Governance is architecture, not policy","It works when the platform makes the single definition the default."],["From static reports to governed platforms","The learning curve of code-based modelling pays back in confidence."]]},
+zh:{title:"语义层：连接数据工程与 BI 的桥梁",
+ tldr:"难的是一致性，而不是规模。当「收入」在每条查询和每个看板里各写一遍，每次变更都成了一次手工审计。只定义一次，并作为版本化的代码。",
+ context:"在多个组织的数据管道和 BI 项目中，我反复遇到同一个挑战：业务逻辑分散在互不相连的查询、dbt 模型和看板配置里。很少有工具能把版本控制、治理这些数据开发实践带进可视化流程。",
+ problem:"「收入」「活跃用户」这类定义被硬编码在很多地方。核心指标一变，分析师就得手工找出并更新每张报表：慢、易错，而且会侵蚀信任。",
+ approach:["用语义层做桥梁：物理表变成 View 和 Explore，维度和度量作为代码只定义一次，每个部门看到同一套指标。","让 Looker 把优化后的 SQL 直接发到数仓，而不是搬运数据，展示层因此保持实时且受治理。","用 Git 把软件工程实践带进 BI：指标变更可追踪、可评审，在分支上的开发模式里试验，再通过 CI/CD（如 GitLab）只把验证过的代码推给用户。"],
+ principles:[["一致性才是真正的扩展难题","数据多了可以应对；同一指标的版本多了却不行。"],["治理是架构，不是制度","当平台让唯一定义成为默认，治理才真正生效。"],["从静态报表走向受治理的平台","代码化建模的学习成本，会以信心的形式回报。"]]},
+fr:{title:"La couche sémantique, pont entre data engineering et BI",
+ tldr:"La vraie difficulté n'est pas l'échelle mais la cohérence. Quand le « Revenue » est recodé dans chaque requête et chaque dashboard, chaque changement devient un audit manuel. Le définir une fois, en code versionné.",
+ context:"Sur les pipelines et projets BI de plusieurs organisations, le même défi revenait : une logique métier fragmentée entre requêtes, modèles dbt et paramètres de dashboards. Peu d'outils intègrent des pratiques de développement comme le versioning et la gouvernance dans le flux de visualisation.",
+ problem:"Des définitions comme « Revenue » ou « Utilisateurs actifs » sont codées en dur à de nombreux endroits. Quand une métrique clé change, il faut retrouver et corriger chaque rapport à la main : lent, risqué, et nuisible à la confiance.",
+ approach:["Faire de la couche sémantique le pont : les tables physiques deviennent Views et Explores, dimensions et mesures sont définies une fois en code, et chaque département lit les mêmes métriques.","Laisser Looker envoyer un SQL optimisé à l'entrepôt plutôt que déplacer la donnée, pour une présentation à jour et gouvernée.","Apporter les pratiques logicielles à la BI avec Git : changements de métriques tracés et relus, mode développement sur branches, et CI/CD (ex. GitLab) pour ne livrer que du code validé."],
+ principles:[["La cohérence est le vrai défi d'échelle","Plus de données se gère ; plus de versions d'une même métrique, non."],["La gouvernance est une architecture, pas une politique","Elle fonctionne quand la plateforme fait de la définition unique le chemin par défaut."],["Des rapports statiques aux plateformes gouvernées","La courbe d'apprentissage du code se rembourse en sérénité."]]}}
+});
+
 // ---------- diagrams (inline SVG, labels per language) ----------
 const svgWrap=(w,h,body)=>`<svg viewBox="0 0 ${w} ${h}" class="fig-svg" role="img"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="f-head"/></marker></defs>${body}</svg>`;
 const R=(x,y,w,h,c="f-box",rx=6)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" class="${c}"/>`;
@@ -687,19 +1375,112 @@ where:L=>{
   return svgWrap(640,204,b);}
 };
 
+Object.assign(FIGL,{
+declar:{en:[["Config file","YAML / JSON"],["CI/CD","validation"],["Internal framework","translates"],["Airflow","orchestrates"],["Dataproc / K8s","computes"],"You declare the what","The platform runs the how"],
+        zh:[["配置文件","YAML / JSON"],["CI/CD","校验"],["内部框架","翻译"],["Airflow","编排"],["Dataproc / K8s","计算"],"你声明「做什么」","平台负责「怎么做」"],
+        fr:[["Fichier de config","YAML / JSON"],["CI/CD","validation"],["Framework interne","traduit"],["Airflow","orchestre"],["Dataproc / K8s","calcule"],"Vous déclarez le quoi","La plateforme gère le comment"]},
+treso:{en:["Goods receipts per day","month-end closing","validations postponed","2nd: catch-up","Illustrative values"],
+       zh:["每日收货量","月末结账","确认被推迟","2 号：集中补录","示意数值"],
+       fr:["Réceptions par jour","clôture fin de mois","validations reportées","le 2 : rattrapage","Valeurs illustratives"]},
+ghost:{en:["Rows in SAP","Dashboard, no snapshot","Rebuilt daily snapshot","stock goes to 0: no row written","phantom stock","Illustrative","Day"],
+       zh:["SAP 中的记录","无快照的看板","重建的每日快照","库存降到 0：没有写入新行","幽灵库存","示意","日期"],
+       fr:["Lignes dans SAP","Dashboard sans snapshot","Snapshot quotidien reconstruit","le stock passe à 0 : aucune ligne écrite","stock fantôme","Illustratif","Jour"]},
+joins:{en:["Product","Target","Actual","LEFT JOIN","FULL OUTER JOIN","Product A","Product B","Product C (launch delayed)","shown","hidden","0 · red flag","execution view","strategic view","Illustrative figures"],
+       zh:["产品","目标","实际","LEFT JOIN","FULL OUTER JOIN","产品 A","产品 B","产品 C（推迟上市）","显示","被隐藏","0 · 红色警报","执行视图","战略视图","示意数字"],
+       fr:["Produit","Objectif","Réel","LEFT JOIN","FULL OUTER JOIN","Produit A","Produit B","Produit C (lancement retardé)","affiché","masqué","0 · alerte rouge","vue exécution","vue stratégique","Chiffres illustratifs"]},
+gcp:{en:["Data lake project","storage · one copy of the data","Billing projects","Marketing","R&D","Finance","queries billed to each team","DEV","INT","OPE (prod)","realistic volumes · IaC validated"],
+     zh:["数据湖项目","只负责存储 · 数据只有一份","计费项目","市场","研发","财务","查询费用记在各团队名下","DEV","INT","OPE（生产）","接近真实的数据量 · IaC 验证"],
+     fr:["Projet Data Lake","stockage · une seule copie","Projets de facturation","Marketing","R&D","Finance","requêtes facturées à chaque équipe","DEV","INT","OPE (prod)","volumes réalistes · IaC validée"]},
+fanout:{en:["Monthly target","Daily sales","After the join","date","sales","target","SUM(target) = 93,000","should be 3,000","Illustrative"],
+        zh:["月度目标","日销售","关联之后","日期","销售","目标","SUM(目标) = 93,000","应为 3,000","示意"],
+        fr:["Objectif mensuel","Ventes quotidiennes","Après la jointure","date","ventes","objectif","SUM(objectif) = 93 000","devrait être 3 000","Illustratif"]},
+brain:{en:["All-in-one","Decoupled","VM","Orchestrator","schedules + runs","Python job","shared RAM","One heavy job can take the scheduler down","schedules only","Dataproc / Spark","Kubernetes","Failures stay isolated · more infrastructure to run"],
+       zh:["一体化","解耦","虚拟机","编排器","调度 + 执行","Python 任务","共享内存","一个重任务就能拖垮调度器","只负责调度","Dataproc / Spark","Kubernetes","故障相互隔离 · 需要运维更多基础设施"],
+       fr:["Tout-en-un","Découplé","VM","Orchestrateur","planifie + exécute","Job Python","RAM partagée","Un job lourd peut faire tomber l'ordonnanceur","planifie seulement","Dataproc / Spark","Kubernetes","Pannes isolées · plus d'infrastructure à gérer"]},
+star:{en:["fare · distance · tips","standard · JFK · negotiated","metrics","descriptions & pricing rules"],
+      zh:["车费 · 距离 · 小费","标准 · JFK · 协商价","度量","描述与定价规则"],
+      fr:["tarif · distance · pourboires","standard · JFK · négocié","métriques","descriptions et règles tarifaires"]},
+uberflow:{en:["raw NYC taxi data","on a GCP VM","facts & dimensions","dashboard","loader","transformer","exporter","tests in every block"],
+          zh:["纽约出租车原始数据","运行在 GCP 虚拟机上","事实表与维度表","看板","加载","转换","导出","每个块都有测试"],
+          fr:["données taxis NYC brutes","sur une VM GCP","faits et dimensions","dashboard","loader","transformer","exporter","tests dans chaque bloc"]},
+lookml:{en:[["View","dimensions · measures"],["Explore","joins defined once"],["Model","connection · who sees what"],["Dashboard","as code"],"Everything versioned in Git · development mode → production mode"],
+        zh:[["View","维度 · 度量"],["Explore","关联只定义一次"],["Model","连接 · 谁能看到什么"],["看板","即代码"],"全部在 Git 中版本化 · 开发模式 → 生产模式"],
+        fr:[["View","dimensions · mesures"],["Explore","jointures définies une fois"],["Model","connexion · qui voit quoi"],["Dashboard","as code"],"Tout est versionné dans Git · mode développement → production"]}
+});
+
+Object.assign(FIG,{
+declar:L=>{let b="";const w=126,g=18;
+  for(let i=0;i<5;i++){const x=i*(w+g);b+=R(x,46,w,62,i===0?"f-accsoft":"f-soft")+T(x+w/2,72,L[i][0],"f-t","middle")+T(x+w/2,92,L[i][1],"f-s-sm","middle");if(i<4)b+=Ln(x+w+2,77,x+w+g-2,77);}
+  b+=T(w/2,30,L[5],"f-acc-t","middle")+`<path d="M${w+g} 34 L${w+g} 26 L${5*w+4*g} 26 L${5*w+4*g} 34" class="f-line" fill="none"/>`+T((w+g+5*w+4*g)/2,18,L[6],"f-s","middle");
+  return svgWrap(5*w+4*g,116,b);},
+treso:L=>{const v=[[25,100],[26,95],[27,105],[28,98],[29,60],[30,30],[31,15],[1,20],[2,190],[3,150],[4,110],[5,100]];let b=T(0,14,L[0],"f-s");
+  const base=170,s=0.65;v.forEach(([d,n],i)=>{const x=40+i*50,h=n*s,c=(i>=4&&i<=7)?"f-warn":(i===8?"f-acc":"f-soft");b+=R(x,base-h,36,h,c,3)+T(x+18,base+16,d,"f-s","middle");});
+  b+=Ln(40+7*50+43,40,40+7*50+43,base,"f-bad",false)+T(40+7*50+43,32,L[1],"f-warn-t","end");
+  b+=T(40+5*50,base-52,L[2],"f-warn-t","middle")+T(40+8*50+42,base-110,L[3],"f-acc-t","start")+T(640,198,L[4],"f-s-sm","end");
+  return svgWrap(640,204,b);},
+ghost:L=>{let b="";const cx=i=>230+i*84;
+  b+=T(0,20,L[6],"f-s");for(let i=0;i<5;i++)b+=T(cx(i)+30,20,"D"+(i+1),"f-mono","middle");
+  const rows=[[L[0],["200","—","—","—","—"],"f-soft"],[L[1],["200","200","200","200","200"],"f-warn"],[L[2],["200","200","0","0","0"],"f-accsoft"]];
+  rows.forEach(([lab,vals,c],r)=>{const y=34+r*44;b+=T(0,y+22,lab,"f-t");vals.forEach((v,i)=>{const cls=(r===1&&i>=2)?"f-warn":(r===2&&i>=2?"f-accsoft":"f-row");b+=R(cx(i),y,60,32,cls,4)+T(cx(i)+30,y+21,v,"f-mono-ink","middle");});});
+  b+=Ln(cx(2)+30,170,cx(2)+30,182,"f-bad",false)+T(cx(2)+30,198,L[3],"f-warn-t","middle")+T(cx(4)+68,100,L[4],"f-warn-t","start");
+  return svgWrap(780,206,b);},
+joins:L=>{const cols=[0,230,320,410,535];let b=R(0,0,680,26,"f-soft",4);
+  [L[0],L[1],L[2],L[3],L[4]].forEach((c,i)=>b+=T(cols[i]+8,17,c,i>=3?"f-mono":"f-s"));
+  [[5,"80k€","85k€",8,8],[6,"50k€","42k€",8,8],[7,"100k€","—",9,10]].forEach(([p,t,a,l,f],r)=>{const y=26+r*32,last=r===2;
+    b+=R(0,y,680,32,"f-row",0)+T(8,y+21,L[p],"f-t")+T(cols[1]+8,y+21,t,"f-mono-ink")+T(cols[2]+8,y+21,a,"f-mono-ink");
+    b+=T(cols[3]+8,y+21,L[l],last?"f-s":"f-s");b+=last?R(cols[4]+2,y+5,138,22,"f-warn",4)+T(cols[4]+10,y+21,L[f],"f-warn-t"):T(cols[4]+8,y+21,L[f],"f-s");});
+  b+=T(cols[3]+8,148,L[11],"f-acc-t")+T(cols[4]+8,148,L[12],"f-acc-t")+T(0,176,L[13],"f-s-sm");
+  return svgWrap(680,184,b);},
+gcp:L=>{let b=R(0,20,250,120,"f-accsoft")+T(125,72,L[0],"f-t","middle")+T(125,94,L[1],"f-s-sm","middle");
+  b+=T(470,14,L[2],"f-s","middle");[3,4,5].forEach((k,i)=>{const y=24+i*40;b+=R(390,y,160,32,"f-soft")+T(470,y+21,L[k],"f-t","middle")+Ln(388,y+16,256,80);});
+  b+=T(470,150,L[6],"f-s-sm","middle");
+  const ys=180;[7,8,9].forEach((k,i)=>{const x=60+i*200;b+=R(x,ys,140,34,k===8?"f-warn":"f-soft")+T(x+70,ys+22,L[k],"f-t","middle");if(i<2)b+=Ln(x+142,ys+17,x+198,ys+17);});
+  b+=T(330,ys+54,L[10],"f-warn-t","middle");return svgWrap(700,244,b);},
+fanout:L=>{let b=T(0,14,L[0],"f-s")+R(0,22,150,32,"f-accsoft",4)+T(12,43,"Jan · 3,000","f-mono-ink");
+  b+=T(0,82,L[1],"f-s")+R(0,90,150,64,"f-soft",4)+T(12,110,"01-01 · 100","f-mono-ink")+T(12,128,"01-02 · 100","f-mono-ink")+T(12,146,"… 31 rows","f-mono");
+  b+=Ln(158,88,226,88)+T(192,80,"JOIN","f-tag","middle");
+  b+=T(240,14,L[2],"f-s");const cx=[240,340,430];b+=R(240,22,300,24,"f-soft",0);[L[3],L[4],L[5]].forEach((h,i)=>b+=T(cx[i]+8,38,h,"f-mono"));
+  [["01-01","100"],["01-02","100"],["01-03","100"],["…","…"],["01-31","100"]].forEach((r,i)=>{const y=46+i*24;b+=R(240,y,300,24,"f-row",0)+T(cx[0]+8,y+16,r[0],"f-mono-ink")+T(cx[1]+8,y+16,r[1],"f-mono-ink")+R(cx[2],y,110,24,"f-warn",0)+T(cx[2]+8,y+16,r[0]==="…"?"…":"3,000","f-mono-ink");});
+  b+=T(560,96,L[6],"f-warn-t")+T(560,118,L[7],"f-acc-t")+T(0,196,L[8],"f-s-sm");
+  return svgWrap(720,204,b);},
+brain:L=>{let b=T(0,16,L[0],"f-acc-t")+R(0,26,300,150,"f-soft")+T(14,46,L[2],"f-s");
+  b+=R(20,56,120,52,"f-accsoft")+T(80,78,L[3],"f-t","middle")+T(80,96,L[4],"f-s-sm","middle")+R(160,56,120,52,"f-warn")+T(220,86,L[5],"f-t","middle");
+  b+=R(20,124,260,20,"f-warn",3)+T(150,138,L[6],"f-s-sm","middle")+T(150,196,L[7],"f-warn-t","middle");
+  b+=T(380,16,L[1],"f-acc-t")+R(380,56,150,52,"f-accsoft")+T(455,78,L[3],"f-t","middle")+T(455,96,L[8],"f-s-sm","middle");
+  b+=R(580,30,140,40,"f-soft")+T(650,55,L[9],"f-t","middle")+R(580,96,140,40,"f-soft")+T(650,121,L[10],"f-t","middle");
+  b+=Ln(532,74,576,52)+Ln(532,90,576,114)+T(550,196,L[11],"f-acc-t","middle");
+  return svgWrap(720,206,b);},
+star:L=>{let b=R(220,100,200,64,"f-accsoft")+T(320,124,"fact_trips","f-mono-ink","middle")+T(320,146,L[0],"f-s","middle");
+  const d=[[20,20,"dim_datetime",""],[440,20,"dim_location",""],[220,212,"dim_rate_code",L[1]]];
+  d.forEach(([x,y,n,s])=>{b+=R(x,y,180,s?52:40,"f-soft")+T(x+90,y+(s?22:25),n,"f-mono-ink","middle")+(s?T(x+90,y+40,s,"f-s-sm","middle"):"");});
+  b+=Ln(200,50,236,98,"f-line",false)+Ln(440,50,404,98,"f-line",false)+Ln(320,166,320,210,"f-line",false);
+  b+=T(430,140,L[2],"f-acc-t")+T(0,140,L[3],"f-s");return svgWrap(640,272,b);},
+uberflow:L=>{let b="";
+  b+=R(0,40,110,60,"f-soft")+T(55,66,"GCS","f-t","middle")+T(55,86,L[0],"f-s-sm","middle")+Ln(112,70,140,70);
+  b+=R(142,20,300,110,"f-accsoft")+T(160,40,"Mage AI","f-t")+T(430,40,L[1],"f-s-sm","end");
+  [4,5,6].forEach((k,i)=>{const x=156+i*96;b+=R(x,54,84,34,"f-box")+T(x+42,75,L[k],"f-s","middle");if(i<2)b+=Ln(x+86,71,x+94,71);});
+  b+=T(292,114,L[7],"f-s-sm","middle")+Ln(444,70,472,70);
+  b+=R(474,40,120,60,"f-soft")+T(534,66,"BigQuery","f-t","middle")+T(534,86,L[2],"f-s-sm","middle")+Ln(596,70,624,70);
+  b+=R(626,40,110,60,"f-soft")+T(681,66,"Looker Studio","f-t","middle")+T(681,86,L[3],"f-s-sm","middle");
+  return svgWrap(736,136,b);},
+lookml:L=>{let b="";const w=150,g=26;
+  for(let i=0;i<4;i++){const x=i*(w+g);b+=R(x,10,w,60,i===1?"f-accsoft":"f-soft")+T(x+w/2,36,L[i][0],"f-t","middle")+T(x+w/2,56,L[i][1],"f-s-sm","middle");if(i<3)b+=Ln(x+w+2,40,x+w+g-2,40);}
+  b+=R(0,86,4*w+3*g,26,"f-pill",13)+T((4*w+3*g)/2,103,L[4],"f-s","middle");return svgWrap(4*w+3*g,120,b);}
+});
+
 
 const UI={
  en:{def:"<em>debrief</em> (n.): a review after a mission: what happened, and what to keep from it. Here: one real data problem per note.",search:"Search notes, tools, ideas",overview:"Overview",domains:"Domains",index:"Index",concepts:"Concepts A–Z",
    eyebrow:n=>`Knowledge base · ${n} notes`,h1:"Real data problems, one note at a time.",intro:"Each note starts from a situation met on a project: the background, what went wrong, what was done, and the principles that apply to any data stack. Browse by domain, or follow a concept across notes.",
-   latest:"Latest notes",also:"Also touches this domain",none:"No note filed here yet.",context:"Background",problem:"What went wrong",approach:"What I did / learned",principles:"Principles to carry over",diagram:"Diagram",stack:"Stack",conc:"Concepts",related:"Related notes",orig:"Original LinkedIn post",open:"Open on LinkedIn ↗",alsoIn:"also in",
+   latest:"Latest notes",also:"Also touches this domain",none:"No note filed here yet.",context:"Background",problem:"What went wrong",approach:"What I did / learned",principles:"Principles to carry over",diagram:"Diagram",stack:"Stack",conc:"Concepts",related:"Related notes",orig:"Original LinkedIn post",open:"Open on LinkedIn ↗",alsoIn:"also in",series:"Series",part:(i,n)=>`Part ${i} of ${n}`,article:"Read the full article on Medium ↗",ol:{en:"English",fr:"French"},seriesH:"Series",
    conceptsIntro:"Ideas that come back across notes. A concept with several notes is a thread worth following.",results:(n,q)=>`${n} note${n===1?"":"s"} for “${q}”`,noresult:"Nothing matches. Try a tool (Looker, Airflow) or an idea (history, filter).",search_e:"Search",hasfig:"◇ diagram",notes:n=>`${n} note${n>1?"s":""}`,by:"By Lingzhe Huang, data consultant · <a href=\"https://www.linkedin.com/in/lingzhe-huang/\" target=\"_blank\" rel=\"noopener\">LinkedIn</a>"},
  zh:{def:"<em>debrief</em>（复盘）：任务结束后的回顾：发生了什么，留下什么经验。在这里：一条笔记，对应一个真实的数据问题。",search:"搜索笔记、工具、概念",overview:"总览",domains:"领域",index:"索引",concepts:"概念索引",
    eyebrow:n=>`知识库 · ${n} 条笔记`,h1:"真实项目里的数据问题，一条一条记下来。",intro:"每条笔记都从项目中遇到的情境出发：背景是什么、哪里出了问题、怎么做的，以及适用于任何数据环境的通用原则。可以按领域浏览，也可以顺着某个概念串起多条笔记。",
-   latest:"最新笔记",also:"也涉及这个领域",none:"这里还没有笔记。",context:"背景",problem:"问题出在哪",approach:"做法 / 学到的功课",principles:"可以迁移的原则",diagram:"示意图",stack:"技术栈",conc:"相关概念",related:"相关笔记",orig:"领英原帖",open:"在领英上打开 ↗",alsoIn:"同时属于",
+   latest:"最新笔记",also:"也涉及这个领域",none:"这里还没有笔记。",context:"背景",problem:"问题出在哪",approach:"做法 / 学到的功课",principles:"可以迁移的原则",diagram:"示意图",stack:"技术栈",conc:"相关概念",related:"相关笔记",orig:"领英原帖",open:"在领英上打开 ↗",alsoIn:"同时属于",series:"系列",part:(i,n)=>`第 ${i} / ${n} 篇`,article:"在 Medium 上阅读全文 ↗",ol:{en:"英文",fr:"法文"},seriesH:"系列",
    conceptsIntro:"在多条笔记中反复出现的概念。一个概念下有几条笔记，就是一条值得顺着读的线索。",results:(n,q)=>`“${q}” 共 ${n} 条结果`,noresult:"没有匹配的笔记。可以试试工具名（Looker、Airflow）或概念（历史、过滤）。",search_e:"搜索",hasfig:"◇ 含示意图",notes:n=>`${n} 条笔记`,by:"作者 Lingzhe Huang，数据顾问 · <a href=\"https://www.linkedin.com/in/lingzhe-huang/\" target=\"_blank\" rel=\"noopener\">LinkedIn</a>"},
  fr:{def:"<em>débrief</em> (n. m.) : le retour sur une mission : ce qui s'est passé, ce qu'on en retient. Ici : un vrai problème data par note.",search:"Rechercher notes, outils, idées",overview:"Vue d'ensemble",domains:"Domaines",index:"Index",concepts:"Concepts A–Z",
    eyebrow:n=>`Base de connaissances · ${n} notes`,h1:"De vrais problèmes data, une note à la fois.",intro:"Chaque note part d'une situation rencontrée en mission : le contexte, ce qui a coincé, ce qui a été fait, et les principes valables pour n'importe quelle stack data. Parcourir par domaine, ou suivre un concept d'une note à l'autre.",
-   latest:"Dernières notes",also:"Touche aussi ce domaine",none:"Aucune note pour l'instant.",context:"Contexte",problem:"Ce qui a coincé",approach:"Ce que j'ai fait / appris",principles:"Principes à retenir",diagram:"Schéma",stack:"Stack",conc:"Concepts",related:"Notes liées",orig:"Post LinkedIn d'origine",open:"Ouvrir sur LinkedIn ↗",alsoIn:"aussi dans",
+   latest:"Dernières notes",also:"Touche aussi ce domaine",none:"Aucune note pour l'instant.",context:"Contexte",problem:"Ce qui a coincé",approach:"Ce que j'ai fait / appris",principles:"Principes à retenir",diagram:"Schéma",stack:"Stack",conc:"Concepts",related:"Notes liées",orig:"Post LinkedIn d'origine",open:"Ouvrir sur LinkedIn ↗",alsoIn:"aussi dans",series:"Série",part:(i,n)=>`Partie ${i} sur ${n}`,article:"Lire l'article complet sur Medium ↗",ol:{en:"anglais",fr:"français"},seriesH:"Séries",
    conceptsIntro:"Les idées qui reviennent d'une note à l'autre. Un concept avec plusieurs notes est un fil à suivre.",results:(n,q)=>`${n} note${n>1?"s":""} pour « ${q} »`,noresult:"Aucun résultat. Essayez un outil (Looker, Airflow) ou une idée (historique, filtre).",search_e:"Recherche",hasfig:"◇ schéma",notes:n=>`${n} note${n>1?"s":""}`,by:"Par Lingzhe Huang, consultant data · <a href=\"https://www.linkedin.com/in/lingzhe-huang/\" target=\"_blank\" rel=\"noopener\">LinkedIn</a>"}
 };
 const MON={en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],fr:["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."]};
@@ -707,10 +1488,11 @@ const fmtDate=(iso,l)=>{const d=new Date(iso+"T12:00:00");return l==="zh"?`${d.g
 
 // ---------- data ----------
 const D=Object.fromEntries(DOMAINS.map(d=>[d.id,d]));
-const notes=POSTS.map((p,i)=>{
+const ALLPOSTS=[...POSTS,...POSTS2].sort((a,b)=>b.date.localeCompare(a.date));
+const notes=ALLPOSTS.map((p,i)=>{
   const lines=p.text.split("\n").map(s=>s.trim()).filter(Boolean);
   if(lines[lines.length-1].startsWith("#")) lines.pop();
-  return {...NOTES[p.id],id:p.id,date:p.date,orig:lines,raw:p.text,order:i};
+  return {also:[],...NOTES[p.id],id:p.id,date:p.date,olang:p.olang||"en",orig:lines,raw:p.text,order:i};
 });
 const byId=Object.fromEntries(notes.map(n=>[n.id,n]));
 const inDomain=id=>[...notes.filter(n=>n.domain===id),...notes.filter(n=>n.also.includes(id))];
@@ -742,7 +1524,7 @@ function renderSide(){
 const card=n=>{const c=N(n);return `<button class="card" data-go="note:${n.id}">
   <div class="top"><span><span class="sw" style="background:${D[n.domain].color};width:8px;height:8px"></span>${D[n.domain].name[lang]}</span><span>${fmtDate(n.date,lang)}</span></div>
   <h3>${esc(c.title)}</h3><p>${esc(c.tldr)}</p>
-  <div class="tagrow">${n.stack.slice(0,3).map(s=>`<span class="tag stack">${esc(s)}</span>`).join("")}${n.fig?`<span class="hasfig">${t("hasfig")}</span>`:""}</div></button>`;};
+  <div class="tagrow">${n.stack.slice(0,3).map(s=>`<span class="tag stack">${esc(s)}</span>`).join("")}${n.fig?`<span class="hasfig">${t("hasfig")}</span>`:""}${n.series?`<span class="hasfig">▤ ${esc(SERIES[n.series].name[lang])}</span>`:""}</div></button>`;};
 
 function home(){
   return `<div class="eyebrow">${t("eyebrow")(notes.length)}</div>
@@ -751,6 +1533,8 @@ function home(){
      <h3><span class="sw" style="background:${d.color}"></span>${d.name[lang]}</h3><p>${d.blurb[lang]}</p>
      <ul>${ns.slice(0,3).map(n=>`<li>${esc(N(n).title)}</li>`).join("")}</ul>
      <span class="eyebrow">${t("notes")(ns.length)}</span></button>`}).join("")}</div>
+  <div class="section-h"><h2>${t("seriesH")}</h2></div>
+  <div class="domains">${Object.entries(SERIES).map(([k,s])=>`<div class="domain series-card"><h3>▤ ${esc(s.name[lang])}</h3><ol>${s.ids.map(id=>`<li><button data-go="note:${id}">${esc(N(byId[id]).title)}</button></li>`).join("")}</ol></div>`).join("")}</div>
   <div class="section-h"><h2>${t("latest")}</h2></div>
   <div class="cards">${notes.slice(0,4).map(card).join("")}</div>`;
 }
@@ -770,7 +1554,7 @@ function conceptsView(){
 }
 function related(n){
   const out=[];
-  notes.forEach(m=>{if(m.id===n.id)return;
+  notes.forEach(m=>{if(m.id===n.id||(n.series&&m.series===n.series))return;
     const shared=m.concepts.filter(c=>n.concepts.includes(c));
     if(shared.length) out.push([m,CONCEPTS[shared[0]][lang],2+shared.length]);
     else if(m.domain===n.domain) out.push([m,D[m.domain].name[lang],1]);});
@@ -786,6 +1570,7 @@ function noteView(id){
       <h1>${esc(c.title)}</h1>
       <p class="tldr">${esc(c.tldr)}</p>
     </div>
+    ${n.series?(()=>{const s=SERIES[n.series],i=s.ids.indexOf(n.id);return `<div class="series"><div class="eyebrow">${t("series")} · ${esc(s.name[lang])} · ${t("part")(i+1,s.ids.length)}</div><ol>${s.ids.map(id=>`<li>${id===n.id?`<b>${esc(N(byId[id]).title)}</b>`:`<button data-go="note:${id}">${esc(N(byId[id]).title)}</button>`}</li>`).join("")}</ol></div>`})():""}
     <div class="story">
       <div class="fact"><div class="eyebrow">${t("context")}</div><p>${codeify(c.context)}</p></div>
       <div class="fact prob"><div class="eyebrow">${t("problem")}</div><p>${codeify(c.problem)}</p></div>
@@ -798,7 +1583,8 @@ function noteView(id){
       <div class="block"><h2>${t("conc")}</h2><div class="tagrow">${n.concepts.map(k=>`<button class="tag" data-go="concepts:${k}">${esc(CONCEPTS[k][lang])}</button>`).join("")}</div></div>
     </div>
     ${rel.length?`<div class="block"><h2>${t("related")}</h2><div class="related">${rel.map(([m,why])=>`<button data-go="note:${m.id}"><span class="why">${esc(why)}</span><span>${esc(N(m).title)}</span></button>`).join("")}</div></div>`:""}
-    <details><summary>${t("orig")} · English</summary><div class="orig">${n.orig.map(l=>`<p>${esc(l)}</p>`).join("")}
+    ${n.article?`<a class="open" href="${n.article}" target="_blank" rel="noopener">${t("article")}</a>`:""}
+    <details><summary>${t("orig")} · ${t("ol")[n.olang]||n.olang}</summary><div class="orig">${n.orig.map(l=>`<p>${esc(l)}</p>`).join("")}
       <a class="open" href="https://www.linkedin.com/feed/update/urn:li:activity:${n.id}/" target="_blank" rel="noopener">${t("open")}</a></div></details>
   </article>`;
 }
