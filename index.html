@@ -1,0 +1,838 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Data Debrief: real data engineering and analytics problems from consulting projects, one note at a time. EN / 中文 / FR.">
+<title>Data Debrief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Layout: knowledge-base shell — brand + language + domain index on the left, notes on the right (overview → domain → note with diagram); sidebar becomes a chip row on phones */
+:root{
+  --bg:#EEF2F4; --surface:#FFFFFF; --ink:#13212B; --muted:#5B6B76; --line:#D5DEE3;
+  --accent:#0B7A84; --accent-soft:#D9EFF0; --mark:#B8730F; --mark-soft:#F6E9D3;
+  --display:"Bricolage Grotesque","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E161B; --surface:#152129; --ink:#E4ECEF; --muted:#93A4AE; --line:#253540;
+  --accent:#4CC3CC; --accent-soft:#163A40; --mark:#E8A94A; --mark-soft:#3A2D17; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0E161B; --surface:#152129; --ink:#E4ECEF; --muted:#93A4AE; --line:#253540;
+  --accent:#4CC3CC; --accent-soft:#163A40; --mark:#E8A94A; --mark-soft:#3A2D17; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6}
+.shell{max-width:1200px;margin:0 auto;padding-inline:20px;padding-block:26px 48px;display:grid;grid-template-columns:250px minmax(0,1fr);gap:34px;align-items:start}
+button{font:inherit;color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* sidebar */
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);display:flex;flex-direction:column;gap:16px;min-width:0}
+.brand{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.brand .word{font-family:var(--display);font-weight:800;font-size:31px;line-height:1;letter-spacing:-.03em;display:flex;align-items:flex-end;gap:6px}
+.brand .word i{display:inline-grid;grid-template-columns:repeat(3,6px);gap:2px;margin-bottom:7px}
+.brand .word i b{width:6px;height:6px;border-radius:1px;background:var(--accent)}
+.brand .word i b:nth-child(2n){opacity:.45}
+.brand .def{font-size:12.5px;color:var(--muted);line-height:1.4}
+.brand .def em{font-style:normal;font-family:var(--mono);color:var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.langs{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);align-self:flex-start}
+.langs button{all:unset;cursor:pointer;padding:5px 11px;font-size:13px;color:var(--muted)}
+.langs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.langs button:focus-visible{outline:2px solid var(--accent)}
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:0 10px}
+.search:focus-within{border-color:var(--accent)}
+.search input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;padding:8px 0;outline:none}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-label{margin:6px 0 4px}
+.nav button{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 10px;border-radius:7px;cursor:pointer;font-size:14px}
+.nav button:hover{background:var(--surface)}
+.nav button[aria-current="true"]{background:var(--ink);color:var(--bg)}
+.nav button[aria-current="true"] .n{color:var(--bg);opacity:.7}
+.nav button:focus-visible{outline:2px solid var(--accent)}
+.nav .n{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.nav .lbl{display:flex;align-items:center;gap:9px;min-width:0}
+.by{font-size:12px;color:var(--muted)}
+.by a{color:var(--accent)}
+
+/* main */
+.main{min-width:0;display:flex;flex-direction:column;gap:22px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.6vw,38px);line-height:1.12;margin:0;letter-spacing:-.01em;text-wrap:balance;max-width:26ch}
+.intro{color:var(--muted);max-width:62ch;margin:0}
+.crumbs{display:flex;gap:8px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.crumbs button{all:unset;cursor:pointer;color:var(--accent)}
+.crumbs button:hover{text-decoration:underline}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none}
+
+.domains{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.domain{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.domain:hover,.card:hover{border-color:var(--accent)}
+.domain:focus-visible,.card:focus-visible{outline:2px solid var(--accent)}
+.domain h3{margin:0;font-family:var(--display);font-weight:700;font-size:18px;display:flex;align-items:center;gap:9px}
+.domain p{margin:0;color:var(--muted);font-size:13.5px}
+.domain ul{margin:2px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:13.5px}
+.domain li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.domain li::before{content:"→ ";color:var(--muted)}
+
+.section-h h2{margin:4px 0 0;font-family:var(--display);font-size:19px;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:9px}
+.card .top{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.card .top span:first-child{display:flex;align-items:center;gap:6px}
+.card h3{margin:0;font-family:var(--display);font-weight:500;font-size:17px;line-height:1.3;text-wrap:balance}
+.card p{margin:0;font-size:13.5px;color:var(--muted)}
+.card .hasfig{font-family:var(--mono);font-size:11px;color:var(--accent)}
+.tagrow{display:flex;flex-wrap:wrap;gap:5px}
+.tag{font:500 11.5px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px;background:transparent}
+button.tag{cursor:pointer}
+button.tag:hover{color:var(--ink);border-color:var(--muted)}
+.tag.stack{background:var(--bg);border-color:transparent;color:var(--ink)}
+.empty{color:var(--muted);padding:12px 0}
+
+.concepts{columns:3 220px;column-gap:28px}
+.concept{break-inside:avoid;padding:10px 0;border-top:1px solid var(--line)}
+.concept b{font-family:var(--display);font-weight:500;font-size:15.5px;display:block;margin-bottom:4px}
+.concept button{all:unset;cursor:pointer;display:block;font-size:13px;color:var(--accent);line-height:1.5}
+.concept button:hover{text-decoration:underline}
+.concept.on b{color:var(--accent)}
+
+/* note */
+.note{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:clamp(20px,4vw,42px);display:flex;flex-direction:column;gap:26px}
+.note-head{display:flex;flex-direction:column;gap:10px}
+.tldr{font-size:17px;line-height:1.55;max-width:60ch;margin:0;padding-left:14px;border-left:3px solid var(--accent)}
+.story{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.fact{border-radius:10px;padding:16px 18px;background:var(--bg)}
+.fact.prob{background:var(--mark-soft)}
+.fact p{margin:6px 0 0;font-size:14.5px}
+.block h2{margin:0 0 12px;font-family:var(--mono);font-size:11.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;max-width:72ch;counter-reset:s}
+.steps li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:8px}
+.steps li::before{content:"";width:9px;height:9px;margin-top:8px;border-radius:2px;background:var(--accent)}
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.pr{border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.pr b{font-family:var(--display);font-weight:700;font-size:15.5px;line-height:1.3}
+.pr span{font-size:14px;color:var(--muted)}
+figure{margin:0;padding:18px;border-radius:12px;background:var(--bg);overflow-x:auto}
+figure figcaption{margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em}
+.fig-svg{display:block;width:100%;min-width:560px;height:auto}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
+.related{display:flex;flex-direction:column}
+.related button{all:unset;cursor:pointer;display:flex;gap:12px;align-items:baseline;padding:9px 0;border-top:1px solid var(--line)}
+.related button:hover span:last-child{color:var(--accent)}
+.related .why{font-family:var(--mono);font-size:11px;color:var(--muted);flex:none;width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details{border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.orig{margin-top:14px;display:flex;flex-direction:column;gap:9px;max-width:68ch;font-size:14.5px}
+.orig p{margin:0}
+code{font-family:var(--mono);font-size:.88em;background:var(--bg);padding:1px 5px;border-radius:4px}
+.fact code{background:var(--surface)}
+.open{align-self:flex-start;font:600 13.5px var(--body);color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:8px;padding:8px 14px;margin-top:6px}
+.open:hover{background:var(--accent-soft)}
+
+/* svg classes */
+.f-box{fill:var(--surface);stroke:var(--line)} .f-soft{fill:var(--surface);stroke:var(--line)} .f-row{fill:var(--surface);stroke:var(--line);stroke-width:.6}
+.f-accsoft{fill:var(--accent-soft);stroke:var(--accent)} .f-warn{fill:var(--mark-soft);stroke:var(--mark);stroke-width:.8}
+.f-acc{fill:var(--accent)} .f-pill{fill:var(--bg);stroke:var(--line)} .f-pill-acc{fill:var(--surface);stroke:var(--accent)}
+.f-line{stroke:var(--muted);stroke-width:1.5;fill:none} .f-acc-line{stroke:var(--accent);stroke-width:2;fill:none}
+.f-bad{stroke:var(--mark);stroke-width:1.5;stroke-dasharray:5 4;fill:none} .f-rule{stroke:var(--line);stroke-width:1}
+.f-bgfill{fill:var(--bg)} .f-strike{stroke:var(--mark);stroke-width:1.4} .f-head{fill:var(--muted)}
+.f-t{fill:var(--ink);font:500 13px var(--body)} .f-t-sm{fill:var(--ink);font:500 12px var(--body)} .f-big{fill:var(--ink);font:700 16px var(--display)}
+.f-s{fill:var(--muted);font:12px var(--body)} .f-s-sm{fill:var(--muted);font:11px var(--body)} .f-s-acc{fill:var(--accent);font:500 12px var(--body)}
+.f-tag{fill:var(--accent);font:500 12px var(--mono)} .f-mono{fill:var(--muted);font:11.5px var(--mono)} .f-mono-ink{fill:var(--ink);font:12px var(--mono)}
+.f-warn-t{fill:var(--mark);font:600 12.5px var(--body)} .f-acc-t{fill:var(--accent);font:600 12.5px var(--body)}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:20px}
+  .side{position:static}
+  .nav{flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:4px}
+  .nav-label,.by{display:none}
+  .nav button{white-space:nowrap;border:1px solid var(--line);background:var(--surface)}
+  .story{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:no-preference){.card,.domain,.nav button{transition:background .15s,border-color .15s}}
+</style>
+
+</head>
+<body style="margin:0">
+<div class="shell">
+  <aside class="side">
+    <button class="brand" id="home"><span class="word">Data Debrief<i aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i></span><span class="def" id="def"></span></button>
+    <div class="langs" role="group" aria-label="Language">
+      <button data-lang="en">EN</button><button data-lang="zh">中文</button><button data-lang="fr">FR</button>
+    </div>
+    <label class="search" for="q"><span aria-hidden="true">⌕</span><input id="q" type="search"></label>
+    <nav class="nav" id="nav"></nav>
+    <div class="by" id="by"></div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const POSTS = [
+{id:"7513486370623909889",date:"2026-10-07",imp:79,react:0,text:`Building a Semantic Layer isn’t a "one-and-done" project. Maintenance and adaptability are where the real work begins.
+A few months ago, I modeled a simple, intuitive metric for a client: Lead Time (Délai). The business logic was straightforward: Lead Time = Exit Time - Entry Time. Easy, right?
+Fast forward a few months, and the metric numbers weren't matching business expectations.
+Why? Because human behavior in the field evolved:
+The "Entry" reality: Operators on the ground started marking site entries under a different operational status than what was originally defined during intake—simply because it fitted their daily workflow better.
+The "Exit" reality: The status clicked upon vehicle departure drifted from the theoretical "ideal" state we mapped out in the code.
+The result? A communication gap between field operators, business stakeholders, and developers—leading to a metric that no longer reflected reality.
+This taught me a few invaluable lessons about Semantic Layers & Data Governance:
+1️⃣ A Metric is Only as Good as Its Definition's Clarity. Users shouldn't have to ping developers every few weeks to double-check: "Wait, what does this metric actually include?" Definitions must be self-documenting, transparent, and accessible directly within the semantic layer.
+2️⃣ Design for Human Behavior & Drift. Business logic in code is static; human processes in the field are dynamic. Operators will always choose the path of least friction. Data Engineers need to design frameworks expecting operational habits to evolve.
+3️⃣ Auditability & Traceability Are Non-Negotiable. When definition drift or status mismatches happen, you need line-level traceability to identify where and when the logic diverged, rather than debugging blindly.
+A Semantic Layer isn't just about writing SQL or setting up dbt models—it's about building a living bridge between system logic and field reality.
+How do you handle metric drift and operational changes in your data stacks? Let’s connect in the comments! 👇
+#DataEngineering #AnalyticsEngineering #DataGovernance #SemanticLayer #ModernDataStack #DataModeling`},
+{id:"7510949191003664384",date:"2026-09-30",imp:264,react:4,title:"Event table or milestone table?",text:`When building analytical platforms, one of the most common architectural decisions we face is how to structure temporal data—like order tracking, claim processing, or pipeline lifecycles.
+Do you keep it as an Event Table (1 row per status change) or reshape it into a Milestone Table (1 row per entity with status timestamps as columns)?
+Here is a quick breakdown of when to pivot—and when to proceed with caution.
+🔹 Option 1: The Event-Driven Model (Transactional / Log format)
+Structure: \`entity_id | status_name | timestamp\`
+Pros: Highly scalable & append-only friendly. Captures infinite state transitions and historical retries without schema changes.
+Cons: Downstream queries (e.g., in Looker, Tableau, or SQL) require heavy GROUP BY, LAG/LEAD, or self-joins to calculate lead times between stages.
+🔹 Option 2: The Milestone Model (Denormalized / Lifecycle format)
+Structure: \`entity_id | created_at | shipped_at | delivered_at | cancelled_at\`
+Pros: Exceptionally analyst-friendly and optimized for BI semantic layers. Simple column arithmetic (delivered_at - shipped_at) to calculate funnel conversion times.
+Cons: Requires schema migrations every time a new business status is introduced.
+⚠️ The Catch: When SHOULDN'T You Pivot to Milestones?
+While Milestone tables make dashboards faster and simpler for business stakeholders, reshaping events into milestones can backfire in complex domain logic:
+Overlapping & Non-Linear Statuses: If an entity can enter multiple statuses concurrently (e.g., an order being Partially Refunded while In Transit), mapping timestamps into static columns loses the true sequence of events.
+Reentrant States (Loops): If an order moves from In Inspection ➡️ Rejected ➡️ In Inspection again, a single inspected_at column overwrites history unless you resort to complex array structures.
+💡 Key Engineering Takeaway
+Milestone tables are powerful Gold-layer artifacts for executive reporting, but they shouldn't replace your raw Event tables in the Silver/Data Lake layer.
+Before transforming your transactional event stream into fixed milestone columns, always audit the business process: Is the workflow strictly linear, or are there hidden loops and overlapping states?
+How do you handle lifecycle tracking in your semantic layer? Do you prefer dynamic SQL pivots or pre-computed milestone tables? Let me know in the comments! 👇
+#DataEngineering #AnalyticsEngineering #DataModeling #SQL #BigQuery #Looker #DataArchitecture #FinOps`},
+{id:"7508414074918207489",date:"2026-09-23",imp:137,react:0,title:"Why some systems issue a new ID on every change",text:`Ever wondered why some business systems generate a completely NEW ID every time a record—like a Customer Quote—is modified, instead of keeping the same ID? 💡
+At first glance, it might look like unnecessary data clutter. If a quote goes from $500 to $450, why create quote_id: 1002 when you could just update quote_id: 1001?
+Here is why this choice—known as the Immutable Data Pattern—is actually brilliant, and what it teaches us about handling data:
+1. Real-World Auditability. A quote sent to a customer is a binding paper trail. If a customer holds a PDF marked #1001 for $500, overwriting #1001 to $450 destroys history. Giving each iteration its own unique ID preserves full transparency for legal, financial, and support teams.
+2. Immutability Over Overwriting. In software and data architecture, updating existing rows adds risk and erases context. Inserting a new record with a new ID (and tagging old ones as history) ensures that no event in the business lifecycle is ever lost.
+🧠 Key Takeaways for Data Professionals & Developers:
+State vs. History: Always know whether an ID in your system represents a current state or a single moment in time. Treating a historical snapshot as a unique entity is the fastest way to break your metrics.
+Don't destroy context: Overwriting data is cheap, but losing history is expensive. Whenever business logic involves negotiation, status changes, or approvals, design for immutability.
+Model for the full journey: Good architecture doesn't just answer "Where are we now?"—it effortlessly answers "How did we get here?"
+How does your team handle versioning in your systems—overwriting, snapshotting, or event-driven logs? Let’s discuss in the comments! 👇
+#DataEngineering #SoftwareArchitecture #DataModeling #TechInsights #Analytics`},
+{id:"7505876126917976065",date:"2026-09-16",imp:130,react:2,text:`Caching Is Not Just About Performance. It's About Data Strategy.
+Recently, I spent some time reviewing how caching mechanisms are implemented in analytics platforms, and it reminded me of an interesting principle:
+Not every dataset deserves to be recomputed at the same frequency.
+In many BI projects, we focus on data models, dashboards, and visualizations. But once usage grows, a different challenge emerges: How do we balance freshness, performance, and compute cost?
+A common mistake is to treat every dataset as if it needed real-time recalculation. In reality:
+Reference data may change only a few times per year. Operational data may be refreshed daily. Heavy aggregations may serve hundreds of users while relying on the same underlying logic.
+Recomputing everything for every query is often unnecessary.
+One approach I found particularly interesting in Looker is the distinction between time-based and data-driven refresh strategies. For example:
+\`persist_for\` allows cached data or derived tables to be reused for a defined period of time.
+\`sql_trigger_value\` refreshes data only when a specific value changes, such as the latest load timestamp.
+These are product-specific features, but the underlying idea is universal:
+Refresh data according to its business volatility, not according to a one-size-fits-all rule.
+Whether you're using Looker, Power BI, Tableau, Looker Studio, Snowflake, Databricks, or another analytics platform, the architectural question remains the same:
+Which datasets are expensive to compute? How often do they actually change? When is a refresh really necessary? Can pre-computation or caching provide the same business value at a lower cost?
+In many cases, performance improvements don't come from optimizing SQL. They come from deciding what should be recomputed, when it should be recomputed, and when existing results can safely be reused.
+That shift in thinking can improve both user experience and infrastructure efficiency.
+#DataEngineering #AnalyticsEngineering #BusinessIntelligence #Looker #BigQuery #DataArchitecture #DataAnalytics #PerformanceOptimization #DataPlatform`},
+{id:"7503338921485930496",date:"2026-09-09",imp:105,react:3,text:`A Great FinOps Lesson Learned: Rethinking DAG Granularity 💡
+When working with legacy data pipelines, everything might look like it's running smoothly on the surface. But beneath the hood of a working dashboard, there's often room for operational optimization.
+Recently, during an architectural discussion with senior peers on our team, a key inefficiency was brought to light regarding how some of our pipeline orchestrations were structured.
+🔴 The Anti-Pattern: Over-Granular Execution
+The legacy setup relied on a strict 1-to-1 mapping: One Target Table = One Isolated DAG.
+Because the pipelines ran on Apache Airflow triggering ephemeral PySpark clusters, running dozens of isolated DAGs daily meant triggering cluster provisioning and teardown over and over again.
+The actual compute job for each gold table was lightweight, but the cumulative overhead of boot times and cluster lifecycle management created unnecessary resource fragmentation and inflated compute bills.
+🟢 The Team's Approach: Perimeter-Based Grouping
+After analyzing the execution schedules, the team identified a much cleaner pattern:
+1. Group by Domain & Schedule: Consolidate downstream pipelines by business perimeter and execution frequency.
+2. Shared Cluster Sessions: Execute coupled transformations sequentially within a shared cluster lifecycle, drastically reducing cluster initialization overhead.
+💡 Key Takeaways for Everyday Data Engineering
+1. Bootstrapping Overhead Matters: In cloud-native ecosystems, the cost of spinning up temporary compute nodes can easily outweigh the actual processing time of lightweight queries.
+2. Separation of Concerns vs. Execution Efficiency: While tables should remain logically separated in the semantic layer, their execution pipelines don’t always need to run in complete isolation.
+3. Learning from Peer Reviews: Architectural reviews and cross-team exchanges are often the fastest way to spot historical technical debt that quietly drains cloud budgets.
+How does your team balance pipeline isolation with compute efficiency? Let me know in the comments! 👇
+#DataEngineering #ApacheAirflow #FinOps #AnalyticsEngineering #CloudArchitecture #PySpark`},
+{id:"7500802355303477248",date:"2026-09-02",imp:134,react:5,text:`Building a Scalable Looker Semantic Layer: 6 Rules & Key Takeaways 🚀
+Scaling a Data Platform isn't just about moving data—it’s about building a clean, trusted semantic layer. Here are 6 Looker best practices I keep top of mind:
+1. Modular Architecture: Split code cleanly across View / Explore / Model / Dashboard files instead of dumping logic together.
+2. Low-Level Base Views & Extends: Keep base views aligned with raw tables and use \`extends:\` to build customized business logic without duplicating code.
+3. Primary Key Enforcement: Always define unique Primary Keys (\`primary_key: yes\`) to prevent fan-outs and silent aggregation bugs.
+4. Strict Naming Conventions: Categorize view files with clear prefixes (e.g., fct_, dim_, agg_). It makes dependency mapping instant.
+5. 100% Description Coverage: Document every field—if users don't understand the metric, they won't trust the data.
+6. Native Localization (EN / FR): Use Looker’s built-in localization so international business teams consume data seamlessly.
+💡 Takeaways for Daily Data & Software Engineering
+These BI practices reflect core Software Engineering principles that apply far beyond Looker:
+1. Standardized Naming = Faster Onboarding: Clear conventions (dim_, fct_) save hours of code review and help new engineers ship on Day 1.
+2. Localization Drives Adoption: Thinking about multi-language (EN/FR) and user context early builds a truly business-friendly Data Product.
+3. Governance Prevent Debt: Enforcing primary keys and full documentation up front stops technical debt before it reaches downstream users.
+How do you enforce governance across your semantic layer? 👇
+#DataEngineering #Looker #LookML #AnalyticsEngineering #DataGovernance #BusinessIntelligence`},
+{id:"7485582004340826112",date:"2026-07-22",imp:109,react:0,text:`Never Average an Average: The Sneaky Blind Spot in Data Analytics 🛑
+We’ve all been there: a business stakeholder requests a dashboard tracking the "average cost" or "average efficiency" across a perimeter. It sounds like a straightforward aggregation in your BI tool or a quick SQL query. But there’s a massive trap waiting to distort your insights: taking the average of an average.
+The Logistics Pitfall: A Real-World Example 🚚
+Imagine you need to report a single metric across two logistics hubs: Average Transit Time per Package.
+Hub A (Low volume): Ships 10 packages, average transit time = 2 days.
+Hub B (High volume): Ships 1,000 packages, average transit time = 10 days.
+If you fall into the trap and simply average the two averages, your report will show 6 days.
+But in reality, the vast majority of your packages are stuck in transit for 10 days. The true, volume-weighted average is 9.9 days. Reporting 6 days completely blinds management to a massive supply chain bottleneck.
+Why is this a blind spot for Data Professionals? 🤔
+As data engineers and analysts, we are often laser-focused on data lineage, pipeline orchestration, and clean transfers. When a request asks for the average of a specific column, it’s easy to treat that field as a raw baseline.
+The blind spot happens because we don't always look one layer higher to ask: “Is this metric already an aggregated or pre-processed value?”
+Without tracing the semantic meaning, the code will run flawlessly without throwing errors, leaving the distortion completely invisible until a stakeholder questions the business reality.
+The Solution: Aggregate First, Divide Later 🛠️
+To maintain data integrity, we must bypass pre-calculated metrics and go back to the raw fundamentals. The correct approach is always to calculate a weighted average: sum up the grand total of the values first, and then divide it by the grand total of the base units.
+💡 Data peers: How do you catch these semantic traps early in your data governance or architecture audits? Do you use semantic layers to prevent users from blindly averaging pre-calculated metrics?
+#DataEngineering #DataAnalytics #DataGovernance #BusinessIntelligence #SupplyChainData`},
+{id:"7483045337604030464",date:"2026-07-15",imp:129,react:4,text:`Ultra-Strict Security vs. Low-Tech Clients: Do We Have to Choose?
+This is the story of a technically perfect architecture, fully validated by the Data team, that completely crashed against the reality of the field.
+The Requirement: Share data on a regular basis with an external partner.
+The Initial Plan (Simple & Fluid): Create a GCS Bucket right inside our central Data Lake project and let the client connect via Workload Identity Federation (WIF), completely avoiding any risky .json key exchanges.
+The Double Wall of Reality: 🚧
+1️⃣ The SecOps Veto: Absolute prohibition against letting an external identity—no matter how heavily restricted—authenticate within the Google Cloud project hosting the core of our Data Lake (Blast Radius too high).
+2️⃣ The Theoretical Alternative: Governance pushed us to share data via BigQuery. Except that on the ground, the partner had neither the technical stack nor the skills to query an API or write SQL. They strictly needed raw files.
+The Compromise: 🛡️ Create a completely isolated, third-party Cloud project (an Application Project acting as a Data DMZ), physically duplicate the data into it, and confine all external access there.
+🎓 3 Field Truths to Remember:
+1️⃣ Physical Isolation is Still King: In the enterprise world, auditors don't care how polished your IAM policies are. True isolation comes down to network and project boundaries (Trust Boundaries). If the Core project is compromised, everything is compromised.
+2️⃣ Accessibility is an Architectural Metric: An elegant solution (like sharing via a Data Warehouse) is worthless if the end consumer cannot exploit it. Technology must adapt to the client's maturity, even if it means accepting some data hopping (storage redundancy).
+3️⃣ The Impact of "Shift Left Security": If the alignment between SecOps constraints and the client's limitations had happened on Day 1, we would have designed this dedicated exchange zone immediately, avoiding a heavy refactoring at the end of the cycle.
+💬 In your organizations, when dealing with an external third party, do you favor analytical purity (BigQuery) or the pragmatism of isolated raw files (Data DMZ)? Let's discuss in the comments!
+#DataEngineering #DataGovernance #CloudSecurity #EnterpriseArchitecture #BigQuery`},
+{id:"7480508475865821184",date:"2026-07-08",imp:118,react:2,text:`Should you burn your budget just to rename a few data tables?
+This is the hidden dilemma that plagues Data Architects and Engineers when moving a mature project from a Sandbox/POC into a centralized Core Data Platform.
+To blend into the global enterprise ecosystem, you must suddenly align with strict Naming Conventions (standardized table prefixes, field names, and semantic layer schemas).
+The economic reality? 📉 For the business stakeholders, the value of this renaming is exactly 0%. For the engineering team, retroactively refactoring the entire pipeline and breaking downstream dashboards represents a colossal effort.
+How do you balance structural rigor against immediate delivery goals? Three distinct data engineering strategies usually collide on the field:
+🟢 1. The Zero-Debt Approach (Immediate Alignment). You refactor everything end-to-end before pushing to production, even if it delays delivery by weeks. The Trade-off: You pay the high resource cost upfront to prevent hidden technical debt from making the platform unmaintainable two years down the line.
+🔄 2. The Abstraction Layer Approach (Decoupling). You leave the legacy source code untouched. Instead, you build an intermediate transition layer—using SQL views, aliases, or a mapping layer within your semantic tool (like Looker or dbt). The Trade-off: You encapsulate the legacy schema to expose the new global standard without breaking downstream assets. It keeps the peace, but it shifts the maintenance complexity into the abstraction layer.
+🛑 3. The Legacy Exemption Approach (Statu Quo). You grandfather the existing project in as an authorized exception. The new naming conventions strictly apply only to net-new developments. The Trade-off: Purely cosmetic refactoring yields no immediate business ROI. However, you accept that your global data platform will permanently host non-standard silos.
+The Engineer's Verdict: 🛡️ Data engineering is never just about writing clean code or adhering to academic standards. Managing an enterprise platform means constantly calculating the ROI of refactoring versus the speed of business delivery.
+💬 If you had to choose for your stack today, which strategy are you backing: Zero-Debt (1), Abstraction (2), or Legacy Exemption (3)? Let's discuss in the comments!
+#DataEngineering #DataGovernance #Analytics #EnterpriseArchitecture #DataOps #AnalyticsEngineering`},
+{id:"7477971768150761472",date:"2026-07-01",imp:182,react:1,text:`Can a simple WHERE clause blind an entire Supply Chain?
+Here is a classic story of an apparently logical filter that completely masked a crucial business reality.
+On a complex project involving SAP stock modeling, our team had to harmonize fragmented data: reconstructing missing native historical snapshots, running UNION ALL across different inventory flows, and so on. To optimize the model and eliminate the "noise," I excluded all rows where the financial value was zero (\`value == 0\`).
+The trap? ❌ Business users quickly flagged major discrepancies. Some items had a perfectly positive physical quantity in stock, but a financial value of zero (free samples, write-downs, or billing mismatches). By filtering too early based on a purely accounting metric, the physical logistics reality had completely vanished.
+🎓 What this anomaly reminds us about Data Governance:
+1️⃣ The illusion of "noise": What seems useless to one department (Finance) can be a critical signal for another (Supply Chain). A Data Engineer must map these cross-functional dependencies before cleaning anything.
+2️⃣ Absolute filter transparency: Every WHERE clause introduces a business bias. Filtering assumptions and prerequisites must be documented and shared, not just buried inside the SQL code.
+3️⃣ The danger of blind spots: Before dropping data based on Criterion A, you must systematically audit its systemic impact on Criterion B.
+Data cleaning is never just a technical optimization. It is an act of business modeling in its own right. 🛡️
+💬 How do you handle these conflicting business rules between different departments during your ingestion phases? Let's discuss in the comments!
+#DataEngineering #DataQuality #SAP #SQL #DataGovernance #SupplyChain #AnalyticsEngineering`}
+];
+const DOMAINS = [
+  {id:"semantic", color:"#0B7A84",
+    name:{en:"Semantic layer & BI",zh:"语义层与 BI",fr:"Couche sémantique & BI"},
+    blurb:{en:"Looker, metric definitions and caching: how the layer between data and users stays trustworthy.",zh:"Looker、指标定义与缓存：数据与用户之间的这一层如何保持可信。",fr:"Looker, définitions de métriques et cache : comment la couche entre données et utilisateurs reste fiable."}},
+  {id:"modeling", color:"#3D6FD6",
+    name:{en:"Data modeling",zh:"数据建模",fr:"Modélisation"},
+    blurb:{en:"Table shapes, identity and history: modeling data so it can answer tomorrow's questions.",zh:"表的形状、身份与历史：让数据模型能回答明天的问题。",fr:"Forme des tables, identité et historique : modéliser pour répondre aux questions de demain."}},
+  {id:"orchestration", color:"#8A5BD1",
+    name:{en:"Orchestration & compute",zh:"编排与计算",fr:"Orchestration & calcul"},
+    blurb:{en:"Pipelines, DAG design and what it really costs to run compute.",zh:"管道、DAG 设计，以及运行计算资源的真实成本。",fr:"Pipelines, conception des DAG et coût réel du calcul."}},
+  {id:"business", color:"#C9821B",
+    name:{en:"Business logic",zh:"业务逻辑（métier）",fr:"Logique métier"},
+    blurb:{en:"Where business reality and code disagree: aggregations, filters and field behaviour.",zh:"业务现实与代码不一致的地方：聚合、过滤与现场行为。",fr:"Là où la réalité métier et le code divergent : agrégations, filtres, usages terrain."}},
+  {id:"platform", color:"#4E8A3E",
+    name:{en:"Platform & governance",zh:"平台与治理",fr:"Plateforme & gouvernance"},
+    blurb:{en:"Security boundaries, naming standards and the trade-offs of refactoring.",zh:"安全边界、命名规范与重构的取舍。",fr:"Frontières de sécurité, conventions de nommage et arbitrages de refactoring."}}
+];
+
+const CONCEPTS = {
+  metricDef:{en:"Metric definition",zh:"指标定义",fr:"Définition de métrique"},
+  drift:{en:"Definition drift",zh:"定义漂移",fr:"Dérive de définition"},
+  trace:{en:"Traceability",zh:"可追溯性",fr:"Traçabilité"},
+  evmile:{en:"Events vs milestones",zh:"事件表 vs 里程碑表",fr:"Événements vs jalons"},
+  medallion:{en:"Medallion layers (Silver / Gold)",zh:"分层架构（Silver / Gold）",fr:"Architecture médaillon (Silver / Gold)"},
+  statehist:{en:"State vs history",zh:"状态 vs 历史",fr:"État vs historique"},
+  immut:{en:"Immutability",zh:"不可变性",fr:"Immuabilité"},
+  grain:{en:"Grain (level of detail)",zh:"粒度",fr:"Grain (niveau de détail)"},
+  cache:{en:"Caching & refresh",zh:"缓存与刷新",fr:"Cache et rafraîchissement"},
+  finops:{en:"FinOps",zh:"FinOps（云成本）",fr:"FinOps"},
+  dag:{en:"DAG design",zh:"DAG 设计",fr:"Conception des DAG"},
+  naming:{en:"Naming conventions",zh:"命名规范",fr:"Conventions de nommage"},
+  fanout:{en:"Fan-out",zh:"扇出（重复计数）",fr:"Fan-out (doublons)"},
+  doc:{en:"Documentation",zh:"文档化",fr:"Documentation"},
+  wavg:{en:"Weighted average",zh:"加权平均",fr:"Moyenne pondérée"},
+  trust:{en:"Trust boundary",zh:"信任边界",fr:"Frontière de confiance"},
+  maturity:{en:"Consumer maturity",zh:"使用方成熟度",fr:"Maturité du consommateur"},
+  techdebt:{en:"Technical debt",zh:"技术债",fr:"Dette technique"},
+  filter:{en:"Filter transparency",zh:"过滤透明度",fr:"Transparence des filtres"},
+  xfunc:{en:"Cross-team needs",zh:"跨部门需求",fr:"Besoins transverses"}
+};
+
+const NOTES = {
+/* ---------------- 1. metric drift ---------------- */
+"7513486370623909889":{domain:"semantic",also:["business"],fig:"drift",stack:["Semantic layer","dbt","SQL"],concepts:["metricDef","drift","trace"],
+en:{title:"When a metric drifts: keeping a semantic layer alive",
+ tldr:"A correct metric can become wrong without a single code change, because the people who produce the data change how they work.",
+ context:"For a logistics client, I modeled a Lead Time metric in the semantic layer: the time between a vehicle's entry on site and its exit. The rule was simple: Lead Time = exit time − entry time, each time read from a specific status in the operational system.",
+ problem:"A few months later, the numbers no longer matched what the business saw on the ground. Nothing was broken in the pipeline. Operators had started logging entries under a different status that suited their daily routine, and the status clicked at departure had also drifted from the one mapped in the code. The metric still computed, just on the wrong events.",
+ approach:["Go back to the field and check which statuses are really used at entry and exit, instead of trusting the original specification.","Make the definition explicit and visible in the semantic layer (which statuses, which timestamps) so users can check it without asking a developer.","Use line-level traceability to find where, and since when, the logic and the field diverged."],
+ principles:[["Logic is static, behaviour is not","People take the path of least friction. Expect operational habits to change and review metric definitions on a regular basis."],["A metric is only as good as its definition","Document what a metric includes and excludes where people use it, not in a wiki nobody opens."],["Watch the inputs, not only the output","A sudden shift in which statuses are used is an early warning that a metric is about to drift."]]},
+zh:{title:"指标漂移：语义层不是一次性工程",
+ tldr:"代码一行没改，指标也可能变错——因为产生数据的人改变了做事方式。",
+ context:"我曾为一个物流客户在语义层里建模「交付周期（Lead Time）」指标：车辆进场到离场的时间。规则很简单：Lead Time = 离场时间 − 进场时间，两个时间分别取自业务系统里的特定状态。",
+ problem:"几个月后，数字和业务方在现场看到的情况对不上了。管道本身没有任何故障：现场操作员开始用另一个更顺手的状态来登记进场，离场时点击的状态也偏离了代码里定义的那个。指标照常计算，只是算在了错误的事件上。",
+ approach:["回到现场确认进场和离场实际使用的是哪些状态，而不是继续相信最初的需求文档。","在语义层中把定义写清楚、放在用户看得到的地方（用哪个状态、哪个时间戳），让用户不必去问开发。","借助行级的可追溯性，定位逻辑与现场是从哪里、从什么时候开始分叉的。"],
+ principles:[["逻辑是静态的，人的行为不是","人总会走阻力最小的路。要预期操作习惯会变化，并定期复核指标定义。"],["指标的质量取决于定义的清晰度","在用户使用指标的地方说明它包含什么、不包含什么，而不是放在没人打开的文档里。"],["监控输入，而不只是结果","各状态使用比例的突然变化，往往是指标即将漂移的早期信号。"]]},
+fr:{title:"Quand une métrique dérive : faire vivre la couche sémantique",
+ tldr:"Une métrique juste peut devenir fausse sans changer une ligne de code, simplement parce que ceux qui produisent la donnée changent leurs pratiques.",
+ context:"Pour un client logistique, j'ai modélisé dans la couche sémantique un indicateur de Délai (Lead Time) : le temps entre l'entrée d'un véhicule sur site et sa sortie. Règle simple : Délai = heure de sortie − heure d'entrée, chaque heure étant lue sur un statut précis du système opérationnel.",
+ problem:"Quelques mois plus tard, les chiffres ne correspondaient plus à ce que le métier constatait. Aucun bug dans le pipeline : les opérateurs saisissaient désormais les entrées sous un autre statut, plus pratique pour eux, et le statut cliqué au départ avait lui aussi glissé. La métrique se calculait toujours, mais sur les mauvais événements.",
+ approach:["Retourner sur le terrain pour voir quels statuts sont réellement utilisés à l'entrée et à la sortie, plutôt que de se fier à la spécification initiale.","Rendre la définition explicite et visible dans la couche sémantique (quels statuts, quels horodatages), pour que les utilisateurs la vérifient sans solliciter un développeur.","S'appuyer sur une traçabilité ligne à ligne pour situer où, et depuis quand, la logique et le terrain ont divergé."],
+ principles:[["La logique est figée, les usages évoluent","Chacun prend le chemin le plus simple. Prévoir que les habitudes changent et revoir les définitions régulièrement."],["Une métrique vaut ce que vaut sa définition","Documenter ce qu'elle inclut et exclut là où on la consomme, pas dans un wiki que personne n'ouvre."],["Surveiller les entrées, pas seulement le résultat","Un changement brusque dans les statuts utilisés est un signal précoce de dérive."]]}},
+
+/* ---------------- 2. events vs milestones ---------------- */
+"7510949191003664384":{domain:"modeling",also:["semantic"],fig:"evmile",stack:["SQL","BigQuery","Looker"],concepts:["evmile","medallion","statehist","grain"],
+en:{title:"Event table or milestone table?",
+ tldr:"Keep the full event history as your foundation. Pivot to milestone columns only for reporting, and only when the process is linear.",
+ context:"Lifecycle data (order tracking, claims, pipeline runs) arrives as a series of status changes. When building an analytics platform, you have to decide in which shape to give it to analysts.",
+ problem:"Two shapes compete. An event table keeps one row per status change: flexible, but every lead-time calculation needs LAG/LEAD or self-joins. A milestone table keeps one row per entity and one timestamp column per status: easy to query, but rigid. Pivoting too early can silently destroy information.",
+ approach:["Keep raw events (entity, status, timestamp) in the Silver / Data Lake layer as the source of truth.","Build milestone tables as Gold-layer outputs for dashboards, where a subtraction such as delivered_at − shipped_at gives a lead time.","Before pivoting, check the process. If an entity can hold two statuses at once, or come back to a status (inspection → rejected → inspection), one column per status will overwrite history."],
+ principles:[["Store the grain you may need later","You can always re-aggregate or pivot from detail. You can never get the detail back from a summary."],["Separate the storage shape from the consumption shape","The best model for history is rarely the best model for a dashboard. Keep both, in different layers."],["Audit the process before the schema","Confirm the workflow is strictly linear before fixing it into columns."]]},
+zh:{title:"事件表还是里程碑表？",
+ tldr:"把完整的事件历史作为底座。只在报表层、且流程是线性的时候，才把它转成里程碑列。",
+ context:"生命周期类数据（订单跟踪、理赔处理、管道运行）通常以一连串状态变更的形式出现。搭建分析平台时，需要决定以什么形状提供给分析师。",
+ problem:"有两种形状在竞争。事件表一次状态变化一行：灵活，但每次计算周期都要用 LAG/LEAD 或自关联。里程碑表一个实体一行、每个状态一个时间戳列：好查，但僵硬。过早地透视（pivot）会悄无声息地丢掉信息。",
+ approach:["在 Silver / 数据湖层保留原始事件（实体、状态、时间戳），作为唯一事实来源。","在 Gold 层为看板构建里程碑表，用 delivered_at − shipped_at 这样的简单减法就能得到周期。","透视之前先检查流程：如果一个实体能同时处于两个状态，或者会回到之前的状态（检验 → 拒收 → 再检验），「一个状态一列」就会覆盖历史。"],
+ principles:[["保存你以后可能需要的粒度","从明细随时可以重新聚合或透视，从汇总却永远还原不了明细。"],["存储形状与消费形状分开","最适合保存历史的模型，很少同时最适合看板。两者都保留，放在不同的层。"],["先审视流程，再设计表结构","把流程固定成列之前，先确认它是严格线性的。"]]},
+fr:{title:"Table d'événements ou table de jalons ?",
+ tldr:"Garder l'historique complet des événements comme socle. Ne pivoter en colonnes de jalons que pour le reporting, et seulement si le processus est linéaire.",
+ context:"Les données de cycle de vie (suivi de commandes, sinistres, exécutions de pipelines) arrivent comme une suite de changements de statut. En construisant une plateforme analytique, il faut choisir sous quelle forme les exposer aux analystes.",
+ problem:"Deux formes s'opposent. La table d'événements garde une ligne par changement de statut : souple, mais chaque calcul de délai exige LAG/LEAD ou des auto-jointures. La table de jalons garde une ligne par entité et une colonne d'horodatage par statut : simple à requêter, mais rigide. Pivoter trop tôt détruit de l'information sans bruit.",
+ approach:["Conserver les événements bruts (entité, statut, horodatage) en couche Silver / Data Lake comme source de vérité.","Construire les tables de jalons en couche Gold pour les dashboards, où une soustraction comme delivered_at − shipped_at donne un délai.","Avant de pivoter, vérifier le processus : si une entité peut avoir deux statuts à la fois ou revenir à un statut (inspection → rejet → inspection), une colonne par statut écrase l'historique."],
+ principles:[["Stocker le grain dont on aura besoin","On peut toujours ré-agréger ou pivoter depuis le détail, jamais retrouver le détail depuis un agrégat."],["Séparer forme de stockage et forme de consommation","Le meilleur modèle pour l'historique est rarement le meilleur pour un dashboard. Garder les deux, dans des couches différentes."],["Auditer le processus avant le schéma","Vérifier que le workflow est strictement linéaire avant de le figer en colonnes."]]}},
+
+/* ---------------- 3. immutable IDs ---------------- */
+"7508414074918207489":{domain:"modeling",also:[],fig:"immut",stack:["Source systems","SQL"],concepts:["immut","statehist","trace"],
+en:{title:"Why a new ID for every version?",
+ tldr:"When a record changes, creating a new version instead of overwriting keeps the full story, and that story is often what the business needs.",
+ context:"In some business systems, editing a customer quote does not update it: it creates a new quote with a new ID. Quote 1001 at $500 becomes quote 1002 at $450.",
+ problem:"At first sight it looks like duplicated data, and it is a trap for analysts. Counting quote IDs as if each were a separate deal inflates volumes, and mixing versions breaks metrics.",
+ approach:["Recognise the immutable data pattern: each version is a fact at a point in time; the old one is kept and tagged as history.","For each ID, establish whether it represents the current state of something or one moment in its history.","Build metrics at the right level: the latest version for “current pipeline”, all versions for the negotiation history."],
+ principles:[["Know what an ID means","State or snapshot? Treating a snapshot as a separate entity is the fastest way to break your counts."],["Insert rather than overwrite when history matters","Negotiations, approvals and status changes are business events. Keep them."],["Answer both questions","A good model tells you where you are now and how you got there."]]},
+zh:{title:"为什么每改一次就换一个 ID？",
+ tldr:"记录变化时，新建版本而不是覆盖原记录，能保留完整的来龙去脉——而这往往正是业务需要的。",
+ context:"有些业务系统里，修改客户报价并不会更新原报价，而是生成一个带新 ID 的新报价：报价 1001（500 美元）变成报价 1002（450 美元）。",
+ problem:"乍看像是重复数据，也是分析师容易踩的坑：把每个报价 ID 当成一笔独立的交易来数，会虚增数量；不同版本混在一起，指标就会出错。",
+ approach:["认出这是「不可变数据模式」：每个版本都是某一时刻的事实，旧版本保留并标记为历史。","弄清每个 ID 代表的是某个对象的当前状态，还是它历史上的某一刻。","在正确的层级上建指标：看「当前商机」用最新版本，看谈判过程用全部版本。"],
+ principles:[["先搞清 ID 的含义","它代表状态还是快照？把快照当成独立实体，是把计数弄错的最快方式。"],["历史重要时，用插入代替覆盖","谈判、审批、状态变化都是业务事件，应当保留。"],["同时回答两个问题","好的模型既能回答「现在在哪」，也能回答「是怎么走到这一步的」。"]]},
+fr:{title:"Pourquoi un nouvel ID à chaque version ?",
+ tldr:"Quand un enregistrement change, créer une nouvelle version plutôt qu'écraser garde toute l'histoire, et c'est souvent ce dont le métier a besoin.",
+ context:"Dans certains systèmes, modifier un devis client ne le met pas à jour : cela crée un nouveau devis avec un nouvel ID. Le devis 1001 à 500 $ devient le devis 1002 à 450 $.",
+ problem:"À première vue, cela ressemble à des doublons, et c'est un piège pour l'analyste : compter les IDs comme autant d'affaires distinctes gonfle les volumes, et mélanger les versions fausse les indicateurs.",
+ approach:["Reconnaître le pattern de données immuables : chaque version est un fait daté ; l'ancienne est conservée et marquée comme historique.","Pour chaque ID, établir s'il représente l'état courant d'un objet ou un instant de son histoire.","Construire les métriques au bon niveau : la dernière version pour le « pipeline actuel », toutes les versions pour l'historique de négociation."],
+ principles:[["Savoir ce que représente un ID","État ou instantané ? Traiter un instantané comme une entité distincte casse vite les comptages."],["Insérer plutôt qu'écraser quand l'historique compte","Négociations, validations et changements de statut sont des événements métier : on les garde."],["Répondre aux deux questions","Un bon modèle dit où l'on en est, et comment on y est arrivé."]]}},
+
+/* ---------------- 4. caching ---------------- */
+"7505876126917976065":{domain:"semantic",also:["orchestration"],fig:"cache",stack:["Looker","BigQuery"],concepts:["cache","finops"],
+en:{title:"Refresh by volatility: caching as a data strategy",
+ tldr:"Not every dataset needs to be recomputed at the same frequency. Match the refresh to how often the data really changes.",
+ context:"While reviewing how caching works on an analytics platform, the question was how to balance three things as usage grows: data freshness, dashboard speed and compute cost.",
+ problem:"The default is often to recompute everything on every query, as if all data were real-time. In reality, reference data changes a few times a year, operational data perhaps daily, and heavy aggregations are shared by many users on the same logic.",
+ approach:["Time-based caching (Looker persist_for): reuse results or derived tables for a fixed period.","Data-driven refresh (Looker sql_trigger_value): rebuild only when a value changes, for example the latest load timestamp.","For each dataset, ask: how expensive is it to compute, how often does it change, and when is a refresh really needed?"],
+ principles:[["Refresh follows business volatility","Use a rule per type of data, not one rule for every table."],["Speed often comes from not computing","Deciding what to recompute, and when, can matter more than tuning SQL."],["The idea is tool-agnostic","Power BI, Tableau, Snowflake or Databricks all have equivalents of these mechanisms."]]},
+zh:{title:"按波动性刷新：缓存是一种数据策略",
+ tldr:"不是每个数据集都需要以同样的频率重算。刷新频率应匹配数据真实的变化频率。",
+ context:"在梳理一个分析平台的缓存机制时，核心问题是：随着使用量增长，如何在数据新鲜度、看板速度和计算成本三者之间取得平衡。",
+ problem:"默认做法往往是每次查询都全部重算，好像所有数据都是实时的。现实中，参考数据一年只变几次，运营数据大概每天一变，而重型聚合常被大量用户基于同一套逻辑反复使用。",
+ approach:["基于时间的缓存（Looker 的 persist_for）：在固定时间段内复用查询结果或派生表。","基于数据的刷新（Looker 的 sql_trigger_value）：只有某个值变化时才重建，比如最新一次加载的时间戳。","对每个数据集问三个问题：计算有多贵？多久真正变一次？什么时候才真的需要刷新？"],
+ principles:[["刷新频率跟随业务波动性","按数据类型定规则，而不是所有表一刀切。"],["速度往往来自「不算」","决定算什么、什么时候算，常常比优化 SQL 更重要。"],["这个思路与工具无关","Power BI、Tableau、Snowflake、Databricks 都有对应的机制。"]]},
+fr:{title:"Rafraîchir selon la volatilité : le cache comme stratégie",
+ tldr:"Tous les jeux de données n'ont pas besoin d'être recalculés au même rythme. Adapter le rafraîchissement à la fréquence réelle de changement.",
+ context:"En étudiant le fonctionnement du cache d'une plateforme analytique, la question était d'équilibrer trois choses à mesure que l'usage grandit : fraîcheur des données, rapidité des dashboards et coût de calcul.",
+ problem:"Par défaut, on recalcule souvent tout à chaque requête, comme si tout était temps réel. En pratique, les données de référence changent quelques fois par an, les données opérationnelles peut-être chaque jour, et les grosses agrégations servent de nombreux utilisateurs sur la même logique.",
+ approach:["Cache temporel (Looker persist_for) : réutiliser des résultats ou des tables dérivées pendant une durée fixée.","Rafraîchissement piloté par la donnée (Looker sql_trigger_value) : reconstruire uniquement quand une valeur change, par exemple l'horodatage du dernier chargement.","Pour chaque jeu de données : combien coûte-t-il à calculer, à quelle fréquence change-t-il, quand un rafraîchissement est-il vraiment nécessaire ?"],
+ principles:[["Le rafraîchissement suit la volatilité métier","Une règle par type de donnée, pas une règle unique pour toutes les tables."],["La performance vient souvent de ne pas calculer","Décider quoi recalculer, et quand, compte parfois plus qu'optimiser le SQL."],["L'idée est indépendante de l'outil","Power BI, Tableau, Snowflake ou Databricks ont leurs équivalents."]]}},
+
+/* ---------------- 5. DAG granularity ---------------- */
+"7503338921485930496":{domain:"orchestration",also:["platform"],fig:"dag",stack:["Airflow","PySpark","Ephemeral clusters"],concepts:["dag","finops"],
+en:{title:"One table, one DAG? Rethinking pipeline granularity",
+ tldr:"When each small job starts its own cluster, you pay more for start-up than for the work. Group the jobs that belong together.",
+ context:"A legacy setup on Apache Airflow followed a strict rule: one target table = one isolated DAG. Each DAG started an ephemeral PySpark cluster, ran a light job, then shut it down. The pattern was flagged during an architecture discussion with senior colleagues.",
+ problem:"Dozens of isolated DAGs per day meant dozens of cluster boots and teardowns. Each gold-table job was small, so a large part of the bill was overhead (start-up time and cluster lifecycle), not data processing.",
+ approach:["Group downstream pipelines by business domain and by schedule.","Run related transformations one after another inside a shared cluster session, so the cluster starts once per group instead of once per table.","Keep tables logically separate in the model, even when they now run together."],
+ principles:[["Measure overhead, not only runtime","In the cloud, provisioning can cost more than the query itself."],["Logical separation is not execution isolation","Tables can be separate concepts and still share a run."],["Reviews surface hidden costs","Peer architecture reviews quickly reveal technical debt that quietly drains cloud budgets."]]},
+zh:{title:"一张表一个 DAG？重新思考管道粒度",
+ tldr:"如果每个小任务都单独启动一个集群，你为启动付的钱会比为计算付的还多。把该一起跑的任务合在一起。",
+ context:"一套基于 Apache Airflow 的遗留架构遵循一条严格规则：一张目标表 = 一个独立的 DAG。每个 DAG 都会启动一个临时 PySpark 集群，跑一个很轻的任务，然后关掉。这个模式在与资深同事的一次架构讨论中被指了出来。",
+ problem:"每天几十个独立 DAG，就意味着几十次集群启动和销毁。每张 Gold 表的计算量都很小，所以账单里很大一部分是开销（启动时间和集群生命周期管理），而不是数据处理本身。",
+ approach:["按业务域和调度频率对下游管道分组。","在共享的集群会话里依次执行相关的转换，让集群按组启动一次，而不是每张表启动一次。","在模型中各表仍保持逻辑上的独立，即使它们现在一起运行。"],
+ principles:[["衡量开销，而不只是运行时间","在云上，资源的启动成本可能超过查询本身。"],["逻辑分离 ≠ 执行隔离","表可以是独立的概念，同时共享一次运行。"],["评审能发现隐藏成本","同行架构评审能很快找出悄悄消耗云预算的技术债。"]]},
+fr:{title:"Une table, un DAG ? Repenser la granularité des pipelines",
+ tldr:"Quand chaque petit job démarre son propre cluster, on paie plus le démarrage que le travail. Regrouper les jobs qui vont ensemble.",
+ context:"Une architecture historique sous Apache Airflow suivait une règle stricte : une table cible = un DAG isolé. Chaque DAG lançait un cluster PySpark éphémère, exécutait un job léger, puis l'éteignait. Le pattern a été pointé lors d'une discussion d'architecture avec des collègues seniors.",
+ problem:"Des dizaines de DAGs isolés par jour, c'étaient des dizaines de démarrages et d'arrêts de clusters. Chaque job de table gold était léger : une grande partie de la facture venait du surcoût (temps de démarrage, cycle de vie du cluster), pas du traitement.",
+ approach:["Regrouper les pipelines aval par périmètre métier et par fréquence d'exécution.","Exécuter les transformations liées à la suite dans une session de cluster partagée : le cluster démarre une fois par groupe, pas une fois par table.","Garder les tables logiquement séparées dans le modèle, même si elles s'exécutent ensemble."],
+ principles:[["Mesurer le surcoût, pas seulement la durée","Dans le cloud, provisionner peut coûter plus cher que la requête."],["Séparation logique n'est pas isolation d'exécution","Des tables distinctes peuvent partager une même exécution."],["Les revues révèlent les coûts cachés","Les revues d'architecture entre pairs font vite apparaître la dette qui grève le budget cloud."]]}},
+
+/* ---------------- 6. Looker rules ---------------- */
+"7500802355303477248":{domain:"semantic",also:["platform"],fig:"looker",stack:["Looker","LookML"],concepts:["naming","fanout","doc","metricDef"],
+en:{title:"Six rules for a Looker semantic layer that scales",
+ tldr:"A semantic layer stays trustworthy when its code is modular, its keys are explicit, its names are predictable and every field is documented.",
+ context:"As a data platform grows, the semantic layer (here Looker and LookML) becomes the place where business users meet the data. Without conventions, logic piles up and trust drops.",
+ problem:"Common failure modes: logic dumped into a few large files, duplicated code, missing primary keys that cause fan-out and wrong sums, cryptic field names, undocumented metrics, and a single language for international teams.",
+ approach:["Split code by role: View / Explore / Model / Dashboard files.","Keep base views 1:1 with raw tables and add business logic with extends:, instead of copying code.","Declare a primary key on every view (primary_key: yes) so symmetric aggregates prevent fan-out.","Use prefixes such as fct_, dim_ and agg_ so dependencies are clear at a glance.","Describe 100% of fields, and use Looker's localization for English and French users."],
+ principles:[["Conventions speed up onboarding","Predictable names let a new engineer contribute on day one."],["Governance up front prevents debt","Keys and documentation are cheap at creation and expensive to add later."],["Adoption is a design goal","Language and context for the end user decide whether the data product gets used."]]},
+zh:{title:"让 Looker 语义层可扩展的六条规则",
+ tldr:"代码模块化、主键明确、命名可预测、每个字段都有说明，语义层才能一直被信任。",
+ context:"随着数据平台变大，语义层（这里是 Looker 和 LookML）成了业务用户接触数据的地方。没有规范，逻辑会越堆越乱，信任也随之下降。",
+ problem:"常见的问题：逻辑堆在几个大文件里、代码重复、缺少主键导致扇出和求和错误、字段名晦涩、指标没有说明，以及国际团队只能看单一语言。",
+ approach:["按职责拆分代码：View / Explore / Model / Dashboard 文件分开。","基础视图与原始表一一对应，用 extends: 叠加业务逻辑，而不是复制代码。","每个视图都声明主键（primary_key: yes），让对称聚合（symmetric aggregates）防止扇出。","用 fct_、dim_、agg_ 等前缀命名，依赖关系一眼可见。","100% 字段都写说明，并用 Looker 原生的多语言功能服务英法用户。"],
+ principles:[["规范能加速上手","命名可预测，新工程师第一天就能参与贡献。"],["治理前置，才能避免技术债","主键和文档在创建时很便宜，事后补就很贵。"],["用户采用度本身就是设计目标","面向最终用户的语言和上下文，决定了数据产品会不会被用起来。"]]},
+fr:{title:"Six règles pour une couche sémantique Looker qui passe à l'échelle",
+ tldr:"Une couche sémantique reste fiable quand son code est modulaire, ses clés explicites, ses noms prévisibles et chaque champ documenté.",
+ context:"Quand une plateforme data grandit, la couche sémantique (ici Looker et LookML) devient le lieu où le métier rencontre la donnée. Sans conventions, la logique s'empile et la confiance baisse.",
+ problem:"Écueils fréquents : logique entassée dans quelques gros fichiers, code dupliqué, clés primaires absentes qui provoquent du fan-out et des sommes fausses, noms de champs obscurs, métriques non documentées, une seule langue pour des équipes internationales.",
+ approach:["Découper le code par rôle : fichiers View / Explore / Model / Dashboard.","Garder des vues de base alignées 1:1 sur les tables brutes et ajouter la logique métier avec extends:, sans copier de code.","Déclarer une clé primaire sur chaque vue (primary_key: yes) pour que les agrégats symétriques évitent le fan-out.","Utiliser des préfixes comme fct_, dim_, agg_ pour lire les dépendances d'un coup d'œil.","Décrire 100 % des champs, et utiliser la localisation native de Looker pour les utilisateurs anglophones et francophones."],
+ principles:[["Les conventions accélèrent l'onboarding","Des noms prévisibles permettent de contribuer dès le premier jour."],["La gouvernance en amont évite la dette","Clés et documentation coûtent peu à la création, cher après coup."],["L'adoption est un objectif de conception","La langue et le contexte de l'utilisateur final décident de l'usage du data product."]]}},
+
+/* ---------------- 7. average of averages ---------------- */
+"7485582004340826112":{domain:"business",also:["semantic"],fig:"avg",stack:["SQL","BI tools"],concepts:["wavg","grain","metricDef"],
+en:{title:"Never average an average",
+ tldr:"If a value is already an average, averaging it again gives every group the same weight whatever its size. Recompute from the totals.",
+ context:"A stakeholder asked for one figure across a perimeter: the average transit time per package over two logistics hubs. The source already provided an average per hub.",
+ problem:"Hub A ships 10 packages in 2 days on average; Hub B ships 1,000 packages in 10 days. Averaging the two averages gives 6 days. The real, volume-weighted value is 9.9 days. The query runs without errors, so the gap stays invisible until someone questions the business reality.",
+ approach:["Look one layer higher: is this column a raw value, or already an aggregate?","Go back to the base totals: total transit days ÷ total packages.","Define the metric in the semantic layer as a ratio of sums, so users cannot average it again by mistake."],
+ principles:[["Aggregate first, divide later","Ratios and averages are computed from summed numerators and denominators."],["Know the lineage of a number, not only of a table","Know whether a field is a raw value or a pre-computed result."],["Silent errors are the dangerous ones","A wrong but plausible number needs reviews and tests, because nothing will crash."]]},
+zh:{title:"永远不要对平均值再求平均",
+ tldr:"如果一个值本身已经是平均值，再对它求平均，就等于不管组的大小都给了相同的权重。应当从总量重新计算。",
+ context:"业务方要一个覆盖整个范围的数字：两个物流枢纽的「每件包裹平均运输时长」。数据源里已经有每个枢纽各自的平均值。",
+ problem:"枢纽 A 发了 10 件，平均 2 天；枢纽 B 发了 1,000 件，平均 10 天。把两个平均值再平均，得到 6 天；按件数加权的真实值是 9.9 天。查询不会报任何错，所以这个偏差一直看不见，直到有人质疑业务现实。",
+ approach:["往上多看一层：这个字段是原始值，还是已经聚合过的结果？","回到基础总量：总运输天数 ÷ 总件数。","在语义层里把指标定义成「总和 ÷ 总和」，让用户没法误把它再平均一次。"],
+ principles:[["先聚合，后相除","比率和平均值都应由分子之和与分母之和计算。"],["追溯一个数字的血缘，而不只是一张表的","要知道某个字段是原始值，还是预先计算好的结果。"],["无声的错误最危险","看起来合理却是错的数字不会让任何东西报错，只能靠评审和测试发现。"]]},
+fr:{title:"Ne jamais faire la moyenne d'une moyenne",
+ tldr:"Si une valeur est déjà une moyenne, la moyenner à nouveau donne le même poids à chaque groupe, quelle que soit sa taille. Recalculer depuis les totaux.",
+ context:"Un interlocuteur métier voulait un chiffre unique sur un périmètre : le temps de transit moyen par colis sur deux hubs logistiques. La source fournissait déjà une moyenne par hub.",
+ problem:"Le hub A expédie 10 colis en 2 jours en moyenne ; le hub B, 1 000 colis en 10 jours. La moyenne des deux moyennes donne 6 jours. La vraie valeur, pondérée par le volume, est de 9,9 jours. La requête tourne sans erreur : l'écart reste invisible jusqu'à ce que quelqu'un conteste la réalité métier.",
+ approach:["Remonter d'un niveau : ce champ est-il une valeur brute ou déjà un agrégat ?","Revenir aux totaux de base : total des jours de transit ÷ nombre total de colis.","Définir la métrique dans la couche sémantique comme un rapport de sommes, pour qu'on ne puisse pas la re-moyenner par erreur."],
+ principles:[["Agréger d'abord, diviser ensuite","Ratios et moyennes se calculent à partir de numérateurs et dénominateurs sommés."],["Connaître le lignage d'un chiffre, pas seulement d'une table","Savoir si un champ est une valeur brute ou un résultat pré-calculé."],["Les erreurs silencieuses sont les plus dangereuses","Un chiffre faux mais plausible ne fait rien planter : seules les revues et les tests le détectent."]]}},
+
+/* ---------------- 8. Data DMZ ---------------- */
+"7483045337604030464":{domain:"platform",also:["business"],fig:"dmz",stack:["Google Cloud","GCS","BigQuery","Workload Identity Federation"],concepts:["trust","maturity"],
+en:{title:"Strict security vs. a low-tech partner: the Data DMZ",
+ tldr:"When security forbids external access to the core platform and the partner can only consume files, isolate a dedicated exchange zone.",
+ context:"We had to share data regularly with an external partner. The first design: a GCS bucket inside the central Data Lake project, accessed through Workload Identity Federation, so that no .json service-account keys would ever be exchanged.",
+ problem:"It hit two walls. SecOps vetoed any external identity authenticating inside the project that hosts the core Data Lake: the blast radius was too large. Governance then suggested sharing through BigQuery, but the partner had neither the stack nor the skills to write SQL or call an API. They needed raw files.",
+ approach:["Create a separate, isolated Google Cloud project that acts as a Data DMZ.","Physically copy the required data into it.","Restrict all external access to that project only."],
+ principles:[["Isolation is a boundary, not a policy","Auditors look at project and network boundaries more than at well-written IAM rules. If the core is compromised, everything is."],["Accessibility is an architecture criterion","A solution the consumer cannot use has no value. Adapt to their maturity, even at the cost of duplicated storage."],["Shift security left","Gather SecOps constraints and consumer constraints on day one to avoid a late refactoring."]]},
+zh:{title:"严格安全 vs. 技术能力有限的合作方：数据隔离区（Data DMZ）",
+ tldr:"当安全规定禁止外部访问核心平台、而合作方又只能用文件时，就单独隔离出一个专门的交换区。",
+ context:"我们需要定期和一个外部合作方共享数据。最初的设计：在中心数据湖项目里建一个 GCS 存储桶，让对方通过 Workload Identity Federation 接入，这样就完全不必交换 .json 服务账号密钥。",
+ problem:"这个方案撞上了两堵墙。安全团队（SecOps）否决了任何外部身份在承载核心数据湖的项目里认证：爆炸半径太大。治理团队随后建议通过 BigQuery 共享，但合作方既没有相应的技术栈，也没有写 SQL 或调用 API 的能力——他们只要原始文件。",
+ approach:["新建一个独立、隔离的 Google Cloud 项目，作为数据隔离区（Data DMZ）。","把需要的数据物理复制过去。","所有外部访问都只限定在这个项目里。"],
+ principles:[["隔离是边界，而不是策略","审计关注的是项目和网络边界，而不是 IAM 规则写得多漂亮。核心项目一旦失守，一切都失守。"],["可用性也是架构指标","使用方用不了的方案没有价值。要适配对方的成熟度，哪怕代价是多存一份数据。"],["安全左移","第一天就把安全约束和使用方的限制都摸清，避免项目末期的大重构。"]]},
+fr:{title:"Sécurité stricte vs partenaire peu technique : la Data DMZ",
+ tldr:"Quand la sécurité interdit tout accès externe au cœur de la plateforme et que le partenaire ne sait consommer que des fichiers, isoler une zone d'échange dédiée.",
+ context:"Nous devions partager régulièrement des données avec un partenaire externe. Premier design : un bucket GCS dans le projet central du Data Lake, accessible via Workload Identity Federation, pour ne jamais échanger de clé .json de compte de service.",
+ problem:"Deux murs. La SecOps a refusé qu'une identité externe s'authentifie dans le projet qui héberge le cœur du Data Lake : rayon d'impact trop large. La gouvernance a alors proposé un partage via BigQuery, mais le partenaire n'avait ni la stack ni les compétences pour écrire du SQL ou appeler une API. Il lui fallait des fichiers bruts.",
+ approach:["Créer un projet Google Cloud séparé et isolé, servant de Data DMZ.","Y dupliquer physiquement les données nécessaires.","Y confiner tous les accès externes."],
+ principles:[["L'isolation est une frontière, pas une politique","Les auditeurs regardent les frontières de projet et de réseau plus que la finesse des règles IAM. Si le cœur tombe, tout tombe."],["L'accessibilité est un critère d'architecture","Une solution inexploitable par le consommateur ne vaut rien. S'adapter à sa maturité, quitte à dupliquer le stockage."],["Shift left de la sécurité","Réunir dès le premier jour contraintes SecOps et contraintes du consommateur pour éviter un refactoring tardif."]]}},
+
+/* ---------------- 9. naming debt ---------------- */
+"7480508475865821184":{domain:"platform",also:[],fig:"naming",stack:["SQL views","Looker","dbt"],concepts:["naming","techdebt"],
+en:{title:"Rename everything? Three strategies for naming debt",
+ tldr:"Aligning a legacy project with platform naming standards has no direct business value but a real cost. Choose the strategy on purpose.",
+ context:"A mature project built in a sandbox / proof of concept had to move into the company's central data platform, which enforces strict naming conventions for tables, fields and semantic-layer objects.",
+ problem:"For business stakeholders, renaming adds no value. For engineers, refactoring the pipeline and repairing every broken dashboard is a large effort. How do you trade structural rigour against delivery?",
+ approach:["Zero-debt: refactor everything before production. High cost now, no hidden debt later.","Abstraction layer: keep the legacy code and expose standard names through SQL views, aliases or a mapping in Looker / dbt. Nothing downstream breaks, but complexity moves into that layer.","Legacy exemption: grandfather the project and apply the standard to new work only. No cost now, but permanent non-standard silos."],
+ principles:[["Refactoring is an investment decision","Weigh its return against delivery speed instead of applying standards by reflex."],["Make exceptions explicit","Whatever you choose, write it down so the next team knows why."],["Abstraction moves cost, it does not remove it","A mapping layer has to be maintained too."]]},
+zh:{title:"全部重命名？应对命名债的三种策略",
+ tldr:"让遗留项目对齐平台命名规范，没有直接的业务价值，却有真实的成本。策略要有意识地选。",
+ context:"一个在沙箱 / POC 中成熟起来的项目，需要迁入公司的中心数据平台，而平台对表、字段和语义层对象都有严格的命名规范。",
+ problem:"对业务方来说，重命名的价值是零；对工程团队来说，重构整条管道、修复所有被破坏的看板，是巨大的工作量。结构严谨与交付速度之间怎么取舍？",
+ approach:["零债务：上线前全部重构。现在成本高，以后没有隐藏债务。","抽象层：保留遗留代码，通过 SQL 视图、别名或 Looker / dbt 中的映射层对外暴露标准命名。下游不受影响，但复杂度转移到了这一层。","遗留豁免：把项目作为已授权的例外，新规范只用于新开发。现在零成本，但平台会永久存在不符合规范的孤岛。"],
+ principles:[["重构是一项投资决策","把回报和交付速度放在一起权衡，而不是条件反射式地套规范。"],["把例外写明白","无论选哪种，都记录下来，让下一个团队知道为什么。"],["抽象只是转移成本，不是消除成本","映射层本身也需要维护。"]]},
+fr:{title:"Tout renommer ? Trois stratégies face à la dette de nommage",
+ tldr:"Aligner un projet historique sur les conventions de la plateforme n'apporte pas de valeur métier directe mais coûte cher. Choisir sa stratégie en connaissance de cause.",
+ context:"Un projet mature né en sandbox / POC devait rejoindre la plateforme data centrale de l'entreprise, qui impose des conventions strictes pour les tables, les champs et les objets de la couche sémantique.",
+ problem:"Pour le métier, renommer n'apporte rien. Pour l'équipe, refactorer tout le pipeline et réparer chaque dashboard cassé représente un effort colossal. Comment arbitrer entre rigueur et délai ?",
+ approach:["Zéro dette : tout refactorer avant la mise en production. Coût élevé maintenant, pas de dette cachée plus tard.","Couche d'abstraction : garder le code historique et exposer les noms standard via des vues SQL, des alias ou un mapping dans Looker / dbt. Rien ne casse en aval, mais la complexité se déplace dans cette couche.","Exemption historique : accepter le projet comme exception et n'appliquer la norme qu'aux nouveaux développements. Aucun coût immédiat, mais des silos non standard pour toujours."],
+ principles:[["Refactorer est une décision d'investissement","Mettre son retour en regard de la vitesse de livraison plutôt qu'appliquer la norme par réflexe."],["Rendre les exceptions explicites","Quel que soit le choix, l'écrire pour que l'équipe suivante sache pourquoi."],["L'abstraction déplace le coût, elle ne le supprime pas","Une couche de mapping doit elle aussi être maintenue."]]}},
+
+/* ---------------- 10. WHERE clause ---------------- */
+"7477971768150761472":{domain:"business",also:["modeling"],fig:"where",stack:["SAP","SQL"],concepts:["filter","xfunc"],
+en:{title:"The WHERE clause that hid the stock",
+ tldr:"A filter that removes noise for one team can remove the signal for another. Every filter is a business decision.",
+ context:"On an SAP stock modeling project, we harmonized fragmented data: rebuilding missing historical snapshots and combining several inventory flows with UNION ALL. To simplify the model, I excluded rows whose financial value was zero.",
+ problem:"Business users quickly reported discrepancies. Some items had a positive physical quantity but zero value: free samples, write-downs, billing mismatches. Filtering on an accounting criterion removed real physical stock from the Supply Chain view.",
+ approach:["Drop the early filter and keep quantity and value as independent measures, so each team can filter for its own view.","List which departments use the model and what each one considers noise.","Document filtering assumptions next to the model, not only inside the SQL."],
+ principles:[["Noise is relative","What is useless for Finance can be critical for Supply Chain."],["Every WHERE clause is a business bias","Make filters visible and agreed on, not buried in code."],["Check criterion B before filtering on A","Audit the side effects of a filter on the other measures before dropping rows."]]},
+zh:{title:"一个 WHERE 条件，让库存消失了",
+ tldr:"对一个团队来说是在去噪的过滤条件，对另一个团队可能是在删掉信号。每一个过滤都是一个业务决策。",
+ context:"在一个 SAP 库存建模项目中，我们需要整合零散的数据：重建缺失的历史快照，用 UNION ALL 合并多条库存流。为了简化模型，我排除了财务价值为 0 的行。",
+ problem:"业务用户很快发现了差异。有些物料的实物数量是正的，财务价值却是 0：免费样品、减值、计费不一致。按会计口径过滤，把真实存在的实物库存从供应链视角里删掉了。",
+ approach:["去掉这个过早的过滤，把数量和金额作为两个独立的度量保留下来，让各团队按自己的视角去过滤。","列出哪些部门在用这个模型，以及各自眼中的「噪音」是什么。","把过滤的前提假设写在模型旁边，而不只埋在 SQL 里。"],
+ principles:[["噪音是相对的","对财务没用的数据，可能对供应链至关重要。"],["每个 WHERE 都带着业务偏见","过滤条件要公开、要达成共识，而不是埋在代码里。"],["按 A 过滤之前，先检查对 B 的影响","删行之前，先评估这个过滤对其他度量的连带影响。"]]},
+fr:{title:"La clause WHERE qui a fait disparaître le stock",
+ tldr:"Un filtre qui retire du bruit pour une équipe peut retirer le signal d'une autre. Chaque filtre est une décision métier.",
+ context:"Sur un projet de modélisation des stocks SAP, nous harmonisions des données fragmentées : reconstruction de snapshots historiques manquants, UNION ALL entre plusieurs flux d'inventaire. Pour simplifier le modèle, j'ai exclu les lignes de valeur financière nulle.",
+ problem:"Le métier a vite signalé des écarts. Certains articles avaient une quantité physique positive mais une valeur nulle : échantillons gratuits, dépréciations, écarts de facturation. Filtrer sur un critère comptable a effacé du stock physique bien réel de la vue Supply Chain.",
+ approach:["Supprimer ce filtre précoce et garder quantité et valeur comme deux mesures indépendantes, pour que chaque équipe filtre selon sa propre vue.","Lister les départements qui utilisent le modèle et ce que chacun considère comme du bruit.","Documenter les hypothèses de filtrage à côté du modèle, pas seulement dans le SQL."],
+ principles:[["Le bruit est relatif","Ce qui est inutile pour la Finance peut être critique pour la Supply Chain."],["Chaque WHERE introduit un biais métier","Les filtres doivent être visibles et partagés, pas enfouis dans le code."],["Vérifier le critère B avant de filtrer sur A","Auditer l'effet d'un filtre sur les autres mesures avant de supprimer des lignes."]]}}
+};
+
+// ---------- diagrams (inline SVG, labels per language) ----------
+const svgWrap=(w,h,body)=>`<svg viewBox="0 0 ${w} ${h}" class="fig-svg" role="img"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" class="f-head"/></marker></defs>${body}</svg>`;
+const R=(x,y,w,h,c="f-box",rx=6)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" class="${c}"/>`;
+const T=(x,y,s,c="f-t",a="start")=>`<text x="${x}" y="${y}" class="${c}" text-anchor="${a}">${s}</text>`;
+const Ln=(x1,y1,x2,y2,c="f-line",arrow=true)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${c}" ${arrow?'marker-end="url(#ar)"':""}/>`;
+
+const FIGL={
+drift:{en:["Defined in code","In the field, months later","Entry = status A","Exit = status D","Entry logged as status B","Exit clicked at status C","Lead time","Same formula, computed on different events"],
+       zh:["代码中的定义","几个月后的现场","进场 = 状态 A","离场 = 状态 D","进场登记为状态 B","离场点击状态 C","交付周期","公式没变，算在了别的事件上"],
+       fr:["Défini dans le code","Sur le terrain, des mois après","Entrée = statut A","Sortie = statut D","Entrée saisie en statut B","Sortie cliquée en statut C","Délai","Même formule, calculée sur d'autres événements"]},
+evmile:{en:["Event table · 1 row per status change","Milestone table · 1 row per entity","pivot","First inspection (14:00) is overwritten"],
+        zh:["事件表 · 每次状态变化一行","里程碑表 · 每个实体一行","透视","第一次检验（14:00）被覆盖了"],
+        fr:["Table d'événements · 1 ligne par changement","Table de jalons · 1 ligne par entité","pivot","La 1re inspection (14:00) est écrasée"]},
+immut:{en:["Quote","history","current","edited","Deals to count: 1, not 2 · Negotiation history: 2 versions"],
+       zh:["报价","历史","当前","修改","应计交易数：1，而不是 2 · 谈判历史：2 个版本"],
+       fr:["Devis","historique","courant","modifié","Affaires à compter : 1, pas 2 · Historique de négociation : 2 versions"]},
+cache:{en:["Data","How often it changes","Refresh strategy","Reference data","a few times a year","Long cache (persist_for)","Operational data","daily","Rebuild on new load (sql_trigger_value)","Heavy aggregations","same logic, many users","Compute once, share the cache"],
+       zh:["数据","变化频率","刷新策略","参考数据","一年几次","长时间缓存（persist_for）","运营数据","每天","有新加载才重建（sql_trigger_value）","重型聚合","同一逻辑，大量用户","算一次，共享缓存"],
+       fr:["Donnée","Fréquence de changement","Stratégie","Données de référence","quelques fois par an","Cache long (persist_for)","Données opérationnelles","quotidienne","Reconstruire au chargement (sql_trigger_value)","Agrégations lourdes","même logique, beaucoup d'utilisateurs","Calculer une fois, partager le cache"]},
+dag:{en:["Before · 1 table = 1 DAG = 1 cluster","After · grouped by domain and schedule","cluster start / stop","actual work","Illustrative timeline"],
+     zh:["之前 · 1 张表 = 1 个 DAG = 1 个集群","之后 · 按业务域和调度分组","集群启动 / 关闭","实际计算","示意时间线"],
+     fr:["Avant · 1 table = 1 DAG = 1 cluster","Après · regroupé par domaine et planning","démarrage / arrêt du cluster","travail utile","Chronologie illustrative"]},
+looker:{en:[["Raw table","in the warehouse"],["Base view","fct_ / dim_ prefix"],["extends:","business logic"],["Explore","joins + primary keys"],["Dashboard","100% described · EN / FR"]],
+        zh:[["原始表","数据仓库中"],["基础视图","fct_ / dim_ 前缀"],["extends:","业务逻辑"],["Explore","关联 + 主键"],["看板","字段全说明 · 英 / 法"]],
+        fr:[["Table brute","dans l'entrepôt"],["Vue de base","préfixe fct_ / dim_"],["extends:","logique métier"],["Explore","jointures + clés"],["Dashboard","100 % décrit · EN / FR"]]},
+avg:{en:["Hub A · 10 packages","Hub B · 1,000 packages","days","Average of averages: 6.0 days","Weighted average: 9.9 days","Bar thickness = number of packages"],
+     zh:["枢纽 A · 10 件","枢纽 B · 1,000 件","天","平均值的平均：6.0 天","加权平均：9.9 天","条形粗细 = 包裹数量"],
+     fr:["Hub A · 10 colis","Hub B · 1 000 colis","jours","Moyenne des moyennes : 6,0 j","Moyenne pondérée : 9,9 j","Épaisseur = nombre de colis"]},
+dmz:{en:["Core Data Lake project","internal identities only","Data DMZ project","GCS bucket · raw files","External partner","needs files, no SQL","copy","access","✕ vetoed by SecOps"],
+     zh:["核心数据湖项目","仅限内部身份","数据隔离区项目","GCS 存储桶 · 原始文件","外部合作方","要文件，不写 SQL","复制","访问","✕ 被 SecOps 否决"],
+     fr:["Projet cœur Data Lake","identités internes uniquement","Projet Data DMZ","bucket GCS · fichiers bruts","Partenaire externe","fichiers, pas de SQL","copie","accès","✕ refusé par la SecOps"]},
+naming:{en:["Effort now","Debt later","Zero-debt","Abstraction layer","Legacy exemption","Qualitative comparison"],
+        zh:["当下投入","日后债务","零债务","抽象层","遗留豁免","定性比较"],
+        fr:["Effort immédiat","Dette future","Zéro dette","Couche d'abstraction","Exemption historique","Comparaison qualitative"]},
+where:{en:["Item","Qty","Value","WHERE value <> 0","Part A","Free sample","Written-down item","Part B","kept","dropped","Finance view: complete","Supply Chain view: 55 units missing","Illustrative rows"],
+       zh:["物料","数量","金额","WHERE value <> 0","零件 A","免费样品","已减值物料","零件 B","保留","被删除","财务视角：完整","供应链视角：少了 55 件","示意数据"],
+       fr:["Article","Qté","Valeur","WHERE value <> 0","Pièce A","Échantillon gratuit","Article déprécié","Pièce B","conservé","supprimé","Vue Finance : complète","Vue Supply Chain : 55 unités manquantes","Lignes illustratives"]}
+};
+
+const FIG={
+drift:L=>svgWrap(640,200,
+  T(0,14,L[0],"f-s")+R(40,24,190,40,"f-accsoft")+T(135,49,L[2],"f-t","middle")+R(410,24,190,40,"f-accsoft")+T(505,49,L[3],"f-t","middle")+
+  Ln(232,44,406,44,"f-acc-line")+T(319,38,L[6],"f-tag","middle")+
+  T(0,104,L[1],"f-s")+R(90,114,210,40,"f-warn")+T(195,139,L[4],"f-t","middle")+R(350,114,210,40,"f-warn")+T(455,139,L[5],"f-t","middle")+
+  Ln(302,134,346,134,"f-bad")+
+  Ln(135,66,170,110,"f-bad",false)+Ln(505,66,470,110,"f-bad",false)+
+  T(320,186,L[7],"f-s","middle")),
+evmile:L=>{
+  const rows=[["42","created","09:00"],["42","shipped","11:00"],["42","inspected","14:00"],["42","rejected","15:00"],["42","inspected","17:00"]];
+  let b=T(0,14,L[0],"f-s");
+  b+=R(0,24,280,26,"f-soft",4)+T(10,41,"order","f-mono")+T(70,41,"status","f-mono")+T(200,41,"timestamp","f-mono");
+  rows.forEach((r,i)=>{const y=50+i*26;const hot=i===2;b+=R(0,y,280,26,hot?"f-warn":"f-row",0)+T(10,y+17,r[0],"f-mono-ink")+T(70,y+17,r[1],"f-mono-ink")+T(200,y+17,r[2],"f-mono-ink");});
+  b+=Ln(292,115,348,115)+T(320,106,L[2],"f-tag","middle");
+  const cols=[["order",52],["created_at",85],["shipped_at",85],["inspected_at",95],["rejected_at",85]];
+  b+=T(360,14,L[1],"f-s");let x=360;
+  cols.forEach(([c,w],i)=>{b+=R(x,24,w,26,"f-soft",0)+T(x+6,41,c,"f-mono");
+    const v=["42","09:00","11:00","17:00","15:00"][i];b+=R(x,50,w,30,i===3?"f-warn":"f-row",0)+T(x+6,70,v,"f-mono-ink");x+=w;});
+  b+=Ln(564,84,560,128,"f-bad",false)+T(560,146,L[3],"f-warn-t","middle");
+  return svgWrap(770,190,b);},
+immut:L=>svgWrap(640,160,
+  R(20,24,230,80,"f-soft")+T(40,52,L[0]+" #1001","f-big")+T(40,80,"$500","f-t")+R(170,64,64,22,"f-pill",11)+T(202,79,L[1],"f-s","middle")+
+  Ln(254,64,384,64)+T(319,56,L[3],"f-tag","middle")+
+  R(390,24,230,80,"f-accsoft")+T(410,52,L[0]+" #1002","f-big")+T(410,80,"$450","f-t")+R(540,64,64,22,"f-pill-acc",11)+T(572,79,L[2],"f-s-acc","middle")+
+  T(320,140,L[4],"f-s","middle")),
+cache:L=>{
+  let b=T(0,18,L[0],"f-s")+T(220,18,L[1],"f-s")+T(400,18,L[2],"f-s");
+  [[3,4,5,1],[6,7,8,2],[9,10,11,3]].forEach(([a,c,s,dots],i)=>{const y=34+i*52;
+    b+=Ln(0,y-6,700,y-6,"f-rule",false)+T(0,y+22,L[a],"f-t")+T(220,y+22,L[c],"f-s")+R(400,y+4,300,30,"f-accsoft")+T(412,y+24,L[s],"f-t-sm");});
+  return svgWrap(700,190,b);},
+dag:L=>{
+  let b=T(0,14,L[0],"f-s");const boot=110,job=34,stop=46,x0=80;
+  ["table_1","table_2","table_3"].forEach((t,i)=>{const y=24+i*30;b+=T(0,y+16,t,"f-mono")+R(x0,y,boot,22,"f-warn",3)+R(x0+boot+2,y,job,22,"f-acc",3)+R(x0+boot+job+4,y,stop,22,"f-warn",3);});
+  b+=T(0,138,L[1],"f-s");const y=148;
+  b+=T(0,y+16,"domain_A","f-mono")+R(x0,y,boot,22,"f-warn",3);
+  let x=x0+boot+2;for(let i=0;i<3;i++){b+=R(x,y,job,22,"f-acc",3);x+=job+2;}b+=R(x,y,stop,22,"f-warn",3);
+  b+=R(0,196,14,12,"f-warn",2)+T(20,206,L[2],"f-s")+R(200,196,14,12,"f-acc",2)+T(220,206,L[3],"f-s")+T(640,206,L[4],"f-s","end");
+  return svgWrap(640,214,b);},
+looker:L=>{
+  let b="";const w=128,g=22;
+  L.forEach(([a,c],i)=>{const x=i*(w+g);b+=R(x,20,w,62,i===2?"f-accsoft":"f-soft")+T(x+w/2,46,a,"f-t","middle")+T(x+w/2,66,c,"f-s-sm","middle");if(i<4)b+=Ln(x+w+2,51,x+w+g-2,51);});
+  b+=R(3*(w+g)+10,96,108,22,"f-pill",11)+T(3*(w+g)+64,111,"primary_key: yes","f-mono","middle");
+  return svgWrap(5*w+4*g,126,b);},
+avg:L=>{
+  const X=d=>150+d*46;let b="";
+  b+=T(140,40,L[0],"f-t","end")+R(X(0),33,X(2)-X(0),6,"f-acc",2);
+  b+=T(140,82,L[1],"f-t","end")+R(X(0),66,X(10)-X(0),26,"f-acc",3);
+  b+=Ln(X(0),110,X(10),110,"f-rule",false);
+  [0,2,4,6,8,10].forEach(d=>{b+=Ln(X(d),110,X(d),114,"f-rule",false)+T(X(d),128,d,"f-s","middle");});
+  b+=T(X(10)+6,128,L[2],"f-s");
+  b+=Ln(X(6),20,X(6),110,"f-bad",false)+Ln(X(9.9),20,X(9.9),110,"f-acc-line",false);
+  b+=T(X(6),150,L[3],"f-warn-t","middle")+T(X(9.9),172,L[4],"f-acc-t","end")+T(0,198,L[5],"f-s");
+  return svgWrap(680,206,b);},
+dmz:L=>svgWrap(720,200,
+  `<path d="M640 58 C640 8, 120 8, 120 52" class="f-bad" fill="none"/>`+`<rect x="270" y="10" width="220" height="22" rx="4" class="f-bgfill"/>`+T(380,25,L[8],"f-warn-t","middle")+
+  R(10,58,220,96,"f-soft")+T(120,98,L[0],"f-t","middle")+T(120,120,L[1],"f-s","middle")+
+  R(300,58,190,96,"f-accsoft")+T(395,98,L[2],"f-t","middle")+T(395,120,L[3],"f-s","middle")+
+  R(560,58,150,96,"f-box")+T(635,98,L[4],"f-t","middle")+T(635,120,L[5],"f-s","middle")+
+  Ln(232,106,296,106)+T(264,98,L[6],"f-tag","middle")+Ln(558,106,494,106)+T(526,98,L[7],"f-tag","middle")+
+  T(360,190,"",'f-s')),
+naming:L=>{
+  let b=R(0,6,14,12,"f-acc",2)+T(20,16,L[0],"f-s")+R(150,6,14,12,"f-warn",2)+T(170,16,L[1],"f-s")+T(640,16,L[5],"f-s","end");
+  const base=150,u=30;[[3,0.4,2],[2,1.6,3],[0.4,3,4]].forEach(([n,l,lab],i)=>{const x=60+i*200;
+    b+=R(x,base-n*u,44,n*u,"f-acc",3)+R(x+50,base-l*u,44,l*u,"f-warn",3)+T(x+47,base+22,L[lab],"f-t","middle");});
+  b+=Ln(30,base,620,base,"f-rule",false);
+  return svgWrap(640,182,b);},
+where:L=>{
+  const cols=[[L[0],0],[L[1],200],[L[2],270],[L[3],380]];let b="";
+  b+=R(0,0,640,26,"f-soft",4);cols.forEach(([c,x])=>b+=T(x+10,17,c,c===L[3]?"f-mono":"f-s"));
+  [[4,"120","3,400 €",8],[5,"40","0 €",9],[6,"15","0 €",9],[7,"60","900 €",8]].forEach(([n,q,v,s],i)=>{const y=26+i*30,drop=s===9;
+    b+=R(0,y,640,30,drop?"f-warn":"f-row",0)+T(10,y+20,L[n],"f-t")+T(210,y+20,q,"f-mono-ink")+T(280,y+20,v,"f-mono-ink")+T(390,y+20,L[s],drop?"f-warn-t":"f-s");
+    if(drop)b+=Ln(6,y+15,360,y+15,"f-strike",false);});
+  b+=T(0,176,L[10],"f-s")+T(640,176,L[11],"f-warn-t","end")+T(0,198,L[12],"f-s-sm");
+  return svgWrap(640,204,b);}
+};
+
+
+const UI={
+ en:{def:"<em>debrief</em> (n.): a review after a mission: what happened, and what to keep from it. Here: one real data problem per note.",search:"Search notes, tools, ideas",overview:"Overview",domains:"Domains",index:"Index",concepts:"Concepts A–Z",
+   eyebrow:n=>`Knowledge base · ${n} notes`,h1:"Real data problems, one note at a time.",intro:"Each note starts from a situation met on a project: the background, what went wrong, what was done, and the principles that apply to any data stack. Browse by domain, or follow a concept across notes.",
+   latest:"Latest notes",also:"Also touches this domain",none:"No note filed here yet.",context:"Background",problem:"What went wrong",approach:"What I did / learned",principles:"Principles to carry over",diagram:"Diagram",stack:"Stack",conc:"Concepts",related:"Related notes",orig:"Original LinkedIn post",open:"Open on LinkedIn ↗",alsoIn:"also in",
+   conceptsIntro:"Ideas that come back across notes. A concept with several notes is a thread worth following.",results:(n,q)=>`${n} note${n===1?"":"s"} for “${q}”`,noresult:"Nothing matches. Try a tool (Looker, Airflow) or an idea (history, filter).",search_e:"Search",hasfig:"◇ diagram",notes:n=>`${n} note${n>1?"s":""}`,by:"By Lingzhe Huang, data consultant · <a href=\"https://www.linkedin.com/in/lingzhe-huang/\" target=\"_blank\" rel=\"noopener\">LinkedIn</a>"},
+ zh:{def:"<em>debrief</em>（复盘）：任务结束后的回顾：发生了什么，留下什么经验。在这里：一条笔记，对应一个真实的数据问题。",search:"搜索笔记、工具、概念",overview:"总览",domains:"领域",index:"索引",concepts:"概念索引",
+   eyebrow:n=>`知识库 · ${n} 条笔记`,h1:"真实项目里的数据问题，一条一条记下来。",intro:"每条笔记都从项目中遇到的情境出发：背景是什么、哪里出了问题、怎么做的，以及适用于任何数据环境的通用原则。可以按领域浏览，也可以顺着某个概念串起多条笔记。",
+   latest:"最新笔记",also:"也涉及这个领域",none:"这里还没有笔记。",context:"背景",problem:"问题出在哪",approach:"做法 / 学到的功课",principles:"可以迁移的原则",diagram:"示意图",stack:"技术栈",conc:"相关概念",related:"相关笔记",orig:"领英原帖",open:"在领英上打开 ↗",alsoIn:"同时属于",
+   conceptsIntro:"在多条笔记中反复出现的概念。一个概念下有几条笔记，就是一条值得顺着读的线索。",results:(n,q)=>`“${q}” 共 ${n} 条结果`,noresult:"没有匹配的笔记。可以试试工具名（Looker、Airflow）或概念（历史、过滤）。",search_e:"搜索",hasfig:"◇ 含示意图",notes:n=>`${n} 条笔记`,by:"作者 Lingzhe Huang，数据顾问 · <a href=\"https://www.linkedin.com/in/lingzhe-huang/\" target=\"_blank\" rel=\"noopener\">LinkedIn</a>"},
+ fr:{def:"<em>débrief</em> (n. m.) : le retour sur une mission : ce qui s'est passé, ce qu'on en retient. Ici : un vrai problème data par note.",search:"Rechercher notes, outils, idées",overview:"Vue d'ensemble",domains:"Domaines",index:"Index",concepts:"Concepts A–Z",
+   eyebrow:n=>`Base de connaissances · ${n} notes`,h1:"De vrais problèmes data, une note à la fois.",intro:"Chaque note part d'une situation rencontrée en mission : le contexte, ce qui a coincé, ce qui a été fait, et les principes valables pour n'importe quelle stack data. Parcourir par domaine, ou suivre un concept d'une note à l'autre.",
+   latest:"Dernières notes",also:"Touche aussi ce domaine",none:"Aucune note pour l'instant.",context:"Contexte",problem:"Ce qui a coincé",approach:"Ce que j'ai fait / appris",principles:"Principes à retenir",diagram:"Schéma",stack:"Stack",conc:"Concepts",related:"Notes liées",orig:"Post LinkedIn d'origine",open:"Ouvrir sur LinkedIn ↗",alsoIn:"aussi dans",
+   conceptsIntro:"Les idées qui reviennent d'une note à l'autre. Un concept avec plusieurs notes est un fil à suivre.",results:(n,q)=>`${n} note${n>1?"s":""} pour « ${q} »`,noresult:"Aucun résultat. Essayez un outil (Looker, Airflow) ou une idée (historique, filtre).",search_e:"Recherche",hasfig:"◇ schéma",notes:n=>`${n} note${n>1?"s":""}`,by:"Par Lingzhe Huang, consultant data · <a href=\"https://www.linkedin.com/in/lingzhe-huang/\" target=\"_blank\" rel=\"noopener\">LinkedIn</a>"}
+};
+const MON={en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],fr:["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."]};
+const fmtDate=(iso,l)=>{const d=new Date(iso+"T12:00:00");return l==="zh"?`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`:`${d.getDate()} ${MON[l][d.getMonth()]} ${d.getFullYear()}`;};
+
+// ---------- data ----------
+const D=Object.fromEntries(DOMAINS.map(d=>[d.id,d]));
+const notes=POSTS.map((p,i)=>{
+  const lines=p.text.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(lines[lines.length-1].startsWith("#")) lines.pop();
+  return {...NOTES[p.id],id:p.id,date:p.date,orig:lines,raw:p.text,order:i};
+});
+const byId=Object.fromEntries(notes.map(n=>[n.id,n]));
+const inDomain=id=>[...notes.filter(n=>n.domain===id),...notes.filter(n=>n.also.includes(id))];
+const conceptNotes={};notes.forEach(n=>n.concepts.forEach(c=>(conceptNotes[c]=conceptNotes[c]||[]).push(n.id)));
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const codeify=s=>esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\b(persist_for|sql_trigger_value|primary_key: yes|extends:|delivered_at − shipped_at|LAG\/LEAD|UNION ALL|fct_|dim_|agg_|\.json)/g,"<code>$1</code>");
+
+// ---------- state ----------
+let lang="en";
+try{const s=localStorage.getItem("debrief-lang");if(UI[s])lang=s;else{const n=(navigator.language||"").slice(0,2);if(UI[n])lang=n;}}catch(e){}
+let view={kind:"home"},q="",focusConcept=null;
+const t=k=>UI[lang][k], N=n=>n[lang];
+
+// ---------- render pieces ----------
+function renderSide(){
+  document.documentElement.lang=lang==="zh"?"zh-CN":lang;
+  document.getElementById("def").innerHTML=t("def");
+  document.getElementById("by").innerHTML=t("by");
+  document.getElementById("q").placeholder=t("search");
+  document.querySelectorAll(".langs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===lang));
+  const cur=view.kind==="domain"?view.id:view.kind==="note"?byId[view.id].domain:view.kind;
+  document.getElementById("nav").innerHTML=
+   `<button data-go="home" aria-current="${!q&&cur==="home"}"><span class="lbl">${t("overview")}</span><span class="n">${notes.length}</span></button>
+    <div class="eyebrow nav-label">${t("domains")}</div>`+
+   DOMAINS.map(d=>`<button data-go="domain:${d.id}" aria-current="${!q&&cur===d.id}"><span class="lbl"><span class="sw" style="background:${d.color}"></span>${d.name[lang]}</span><span class="n">${inDomain(d.id).length}</span></button>`).join("")+
+   `<div class="eyebrow nav-label">${t("index")}</div><button data-go="concepts" aria-current="${!q&&cur==="concepts"}"><span class="lbl">${t("concepts")}</span><span class="n">${Object.keys(conceptNotes).length}</span></button>`;
+}
+const card=n=>{const c=N(n);return `<button class="card" data-go="note:${n.id}">
+  <div class="top"><span><span class="sw" style="background:${D[n.domain].color};width:8px;height:8px"></span>${D[n.domain].name[lang]}</span><span>${fmtDate(n.date,lang)}</span></div>
+  <h3>${esc(c.title)}</h3><p>${esc(c.tldr)}</p>
+  <div class="tagrow">${n.stack.slice(0,3).map(s=>`<span class="tag stack">${esc(s)}</span>`).join("")}${n.fig?`<span class="hasfig">${t("hasfig")}</span>`:""}</div></button>`;};
+
+function home(){
+  return `<div class="eyebrow">${t("eyebrow")(notes.length)}</div>
+  <h1>${t("h1")}</h1><p class="intro">${t("intro")}</p>
+  <div class="domains">${DOMAINS.map(d=>{const ns=inDomain(d.id);return `<button class="domain" data-go="domain:${d.id}">
+     <h3><span class="sw" style="background:${d.color}"></span>${d.name[lang]}</h3><p>${d.blurb[lang]}</p>
+     <ul>${ns.slice(0,3).map(n=>`<li>${esc(N(n).title)}</li>`).join("")}</ul>
+     <span class="eyebrow">${t("notes")(ns.length)}</span></button>`}).join("")}</div>
+  <div class="section-h"><h2>${t("latest")}</h2></div>
+  <div class="cards">${notes.slice(0,4).map(card).join("")}</div>`;
+}
+function domainView(id){
+  const d=D[id],prim=notes.filter(n=>n.domain===id),sec=notes.filter(n=>n.also.includes(id));
+  return `<div class="crumbs"><button data-go="home">${t("overview")}</button><span>/</span><span>${d.name[lang]}</span></div>
+  <h1><span class="sw" style="background:${d.color};width:14px;height:14px;margin-right:10px;vertical-align:middle"></span>${d.name[lang]}</h1>
+  <p class="intro">${d.blurb[lang]}</p>
+  <div class="cards">${prim.map(card).join("")||`<div class="empty">${t("none")}</div>`}</div>
+  ${sec.length?`<div class="section-h"><h2>${t("also")}</h2></div><div class="cards">${sec.map(card).join("")}</div>`:""}`;
+}
+function conceptsView(){
+  const keys=Object.keys(conceptNotes).sort((a,b)=>CONCEPTS[a][lang].localeCompare(CONCEPTS[b][lang],lang));
+  return `<div class="crumbs"><button data-go="home">${t("overview")}</button><span>/</span><span>${t("concepts")}</span></div>
+  <h1>${t("concepts")}</h1><p class="intro">${t("conceptsIntro")}</p>
+  <div class="concepts">${keys.map(k=>`<div class="concept${k===focusConcept?" on":""}" id="c-${k}"><b>${esc(CONCEPTS[k][lang])} · ${conceptNotes[k].length}</b>${conceptNotes[k].map(id=>`<button data-go="note:${id}">${esc(N(byId[id]).title)}</button>`).join("")}</div>`).join("")}</div>`;
+}
+function related(n){
+  const out=[];
+  notes.forEach(m=>{if(m.id===n.id)return;
+    const shared=m.concepts.filter(c=>n.concepts.includes(c));
+    if(shared.length) out.push([m,CONCEPTS[shared[0]][lang],2+shared.length]);
+    else if(m.domain===n.domain) out.push([m,D[m.domain].name[lang],1]);});
+  return out.sort((a,b)=>b[2]-a[2]).slice(0,4);
+}
+function noteView(id){
+  const n=byId[id],c=N(n),d=D[n.domain],rel=related(n);
+  const fig=n.fig?`<div class="block"><h2>${t("diagram")}</h2><figure>${FIG[n.fig](FIGL[n.fig][lang])}</figure></div>`:"";
+  return `<div class="crumbs"><button data-go="home">${t("overview")}</button><span>/</span><button data-go="domain:${d.id}">${d.name[lang]}</button></div>
+  <article class="note">
+    <div class="note-head">
+      <div class="eyebrow">${fmtDate(n.date,lang)}${n.also.length?" · "+t("alsoIn")+" "+n.also.map(a=>D[a].name[lang]).join(", "):""}</div>
+      <h1>${esc(c.title)}</h1>
+      <p class="tldr">${esc(c.tldr)}</p>
+    </div>
+    <div class="story">
+      <div class="fact"><div class="eyebrow">${t("context")}</div><p>${codeify(c.context)}</p></div>
+      <div class="fact prob"><div class="eyebrow">${t("problem")}</div><p>${codeify(c.problem)}</p></div>
+    </div>
+    ${fig}
+    <div class="block"><h2>${t("approach")}</h2><ul class="steps">${c.approach.map(s=>`<li><span>${codeify(s)}</span></li>`).join("")}</ul></div>
+    <div class="block"><h2>${t("principles")}</h2><div class="principles">${c.principles.map(([h,p])=>`<div class="pr"><b>${esc(h)}</b><span>${codeify(p)}</span></div>`).join("")}</div></div>
+    <div class="meta-grid">
+      <div class="block"><h2>${t("stack")}</h2><div class="tagrow">${n.stack.map(s=>`<span class="tag stack">${esc(s)}</span>`).join("")}</div></div>
+      <div class="block"><h2>${t("conc")}</h2><div class="tagrow">${n.concepts.map(k=>`<button class="tag" data-go="concepts:${k}">${esc(CONCEPTS[k][lang])}</button>`).join("")}</div></div>
+    </div>
+    ${rel.length?`<div class="block"><h2>${t("related")}</h2><div class="related">${rel.map(([m,why])=>`<button data-go="note:${m.id}"><span class="why">${esc(why)}</span><span>${esc(N(m).title)}</span></button>`).join("")}</div></div>`:""}
+    <details><summary>${t("orig")} · English</summary><div class="orig">${n.orig.map(l=>`<p>${esc(l)}</p>`).join("")}
+      <a class="open" href="https://www.linkedin.com/feed/update/urn:li:activity:${n.id}/" target="_blank" rel="noopener">${t("open")}</a></div></details>
+  </article>`;
+}
+function searchView(){
+  const s=q.toLowerCase();
+  const hits=notes.filter(n=>{const all=["en","zh","fr"].map(l=>{const c=n[l];return [c.title,c.tldr,c.context,c.problem,c.approach.join(" "),c.principles.flat().join(" ")].join(" ")}).join(" ");
+    return (all+" "+n.stack.join(" ")+" "+n.concepts.map(k=>Object.values(CONCEPTS[k]).join(" ")).join(" ")+" "+n.raw).toLowerCase().includes(s);});
+  return `<div class="eyebrow">${t("search_e")}</div><h1>${esc(t("results")(hits.length,q))}</h1>
+  <div class="cards">${hits.map(card).join("")||`<div class="empty">${t("noresult")}</div>`}</div>`;
+}
+
+// ---------- routing ----------
+function render(){
+  document.getElementById("main").innerHTML= q?searchView(): view.kind==="domain"?domainView(view.id): view.kind==="note"?noteView(view.id): view.kind==="concepts"?conceptsView(): home();
+  renderSide();
+}
+function go(target){
+  const [k,id]=target.split(":");
+  focusConcept=k==="concepts"?id||null:null;
+  view={kind:k,id:k==="concepts"?undefined:id}; q=""; document.getElementById("q").value="";
+  try{history.replaceState(null,"",k==="home"?location.pathname:"#"+k+(id&&k!=="concepts"?"-"+id:""));}catch(e){}
+  render();
+  if(focusConcept){const el=document.getElementById("c-"+focusConcept);if(el)el.scrollIntoView({block:"center"});}else window.scrollTo({top:0});
+}
+document.addEventListener("click",e=>{
+  const l=e.target.closest("[data-lang]");if(l){lang=l.dataset.lang;try{localStorage.setItem("debrief-lang",lang);}catch(err){}render();return;}
+  const b=e.target.closest("[data-go]");if(b){e.preventDefault();go(b.dataset.go);}
+});
+document.getElementById("home").addEventListener("click",()=>go("home"));
+document.getElementById("q").addEventListener("input",e=>{q=e.target.value.trim();render();});
+try{const h=location.hash.slice(1),m=h.match(/^(domain|note)-(.+)$/);
+  if(m&&(m[1]==="domain"?D[m[2]]:byId[m[2]])) view={kind:m[1],id:m[2]}; else if(h==="concepts") view={kind:"concepts"};}catch(e){}
+render();
+</script>
+
+</body>
+</html>
