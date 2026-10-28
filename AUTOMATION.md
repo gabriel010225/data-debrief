@@ -66,7 +66,9 @@ Pushing with git is not authorised for this repo, so upload through the browser:
 1. Open https://github.com/gabriel010225/data-debrief/upload/main
 2. With JavaScript in that page, build `File` objects for the new note file(s) and the
    updated `dd-notes.json` (pass each file's text as a JSON string literal), put them in a
-   `DataTransfer`, and dispatch `dragenter`, `dragover`, `drop` on `document.documentElement`.
+   `DataTransfer`, and dispatch `dragenter`, `dragover`, `drop` (bubbling `DragEvent`s carrying
+   that `dataTransfer`) on the page's `file-attachment` element (the drop zone). Setting the
+   file input's `files` does not work; dispatching on `document` does not work either.
    Keep each JavaScript call under ~15 KB; for bigger content, store parts in `window`
    across several calls first.
 3. Check the file names appear in the list, fill the commit message
