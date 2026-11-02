@@ -7,8 +7,11 @@ Claude task runs shortly after and follows this file.
 
 - `index.html`: the site, with the base notes (Jan–Oct 2026) built in. Do not rewrite it.
 - `dd-loader.js`: loads every file listed in `dd-notes.json` and adds it to the site.
-- `dd-notes.json`: `{"version": N, "files": [...]}`, one entry per extra note, oldest first.
+- `dd-notes.json`: `{"version": N, "files": [...], "profile": [...]}`, one entry per extra note in `files`, oldest first.
 - `dd-note-YYYY-MM-DD-<activityId>.js`: one file per imported post, calling `DD.add({...})`.
+- `img/`: the "About me" pages (`dd-profile.js`, `dd-profile-assets.js`) and their screenshots,
+  listed under `profile` in `dd-notes.json`. The weekly import never touches them; keep the
+  `profile` key unchanged when editing the JSON.
 
 ## 1. Find posts that are not on the site yet
 
@@ -50,7 +53,7 @@ Copy the structure of an existing `dd-note-*.js` file exactly. Required content:
   existing CSS classes (`f-soft`, `f-accsoft`, `f-warn`, `f-t`, `f-s`, `f-mono-ink`, …).
   Mark invented example values as "Illustrative".
 
-Then append the new file name to `dd-notes.json` and increase `version` by 1.
+Then append the new file name to `files` in `dd-notes.json` and increase `version` by 1.
 
 ## 3. Test before publishing
 
@@ -63,7 +66,8 @@ horizontal scroll at 390 px width.
 
 Pushing with git is not authorised for this repo, so upload through the browser:
 
-1. Open https://github.com/gabriel010225/data-debrief/upload/main
+1. Open https://github.com/gabriel010225/data-debrief/upload/main (the repository root —
+   uploads land in the folder of the URL, so never use an `/upload/main/<folder>` URL here).
 2. With JavaScript in that page, build `File` objects for the new note file(s) and the
    updated `dd-notes.json` (pass each file's text as a JSON string literal), put them in a
    `DataTransfer`, and dispatch `dragenter`, `dragover`, `drop` (bubbling `DragEvent`s carrying

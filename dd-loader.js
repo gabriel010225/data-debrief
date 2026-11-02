@@ -26,6 +26,8 @@
   fetch("dd-notes.json", { cache: "no-store" }).then(r => r.ok ? r.json() : { files: [] }).then(async m => {
     const v = m.version || Date.now();
     for (const f of m.files || []) await load(f + "?v=" + v);
+    // "About me" pages (skills, experience, projects): independent of the weekly notes.
+    for (const f of m.profile || []) await load(f + "?v=" + v);
     notes.sort((a, b) => b.date.localeCompare(a.date));
     notes.forEach((n, i) => n.order = i);
     try {
