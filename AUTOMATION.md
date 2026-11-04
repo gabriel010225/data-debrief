@@ -10,8 +10,10 @@ Claude task runs shortly after and follows this file.
 - `dd-notes.json`: `{"version": N, "files": [...], "profile": [...]}`, one entry per extra note in `files`, oldest first.
 - `dd-note-YYYY-MM-DD-<activityId>.js`: one file per imported post, calling `DD.add({...})`.
 - `img/`: the "About me" pages (`dd-profile.js`, `dd-profile-assets.js`) and their screenshots,
-  listed under `profile` in `dd-notes.json`. The weekly import never touches them; keep the
-  `profile` key unchanged when editing the JSON.
+  listed under `profile` in `dd-notes.json`. Keep the `profile` key unchanged when editing the
+  JSON. Each week, check them against the new note(s) as described in step 2b; change them only
+  when that step says so. (`img/AUTOMATION.md`, `img/dd-loader.js` and `img/dd-notes.json` are
+  stale copies that nothing loads; always edit the versions at the repo root.)
 
 ## 1. Find posts that are not on the site yet
 
@@ -55,6 +57,36 @@ Copy the structure of an existing `dd-note-*.js` file exactly. Required content:
 
 Then append the new file name to `files` in `dd-notes.json` and increase `version` by 1.
 
+## 2b. Check the "About me" pages against the new note(s)
+
+The About me pages (`img/dd-profile.js`, object `P`) must stay consistent with the notes.
+Some parts update on their own; others are text that may need a small edit.
+
+Updates on its own (just verify it in the test step):
+- Skills & stack, "Seen in" under each capability: the 3 newest notes of that `domain` (or `also`).
+- Toolbox counts: number of notes whose `stack` contains the tool name. So in the note's
+  `stack`, spell tools exactly as in `P.cats` (e.g. `dbt`, `Looker`, `BigQuery`, `Airflow`, `SQL`),
+  otherwise the count stays at 0.
+
+Check by hand, and edit `img/dd-profile.js` (EN / 中文 / FR together) only if the post gives a clear
+reason:
+- `P.caps`: the post shows a skill or theme in a domain that the capability text does not cover
+  at all → add a short phrase to that capability (same tone, no new claims beyond the post).
+- `P.cats`: the post uses a tool that is not in the toolbox → add it with level `"used"`.
+  Never change an existing level (core / used / learn); that is Lingzhe's own estimate.
+- `P.exp` (roles, keywords, tools), `P.certs`, `P.feat`, `P.side`: update only if the post states
+  a new role, certification or project, or a fact that contradicts what is written.
+- Nothing above applies → change nothing, and say so in the report ("About me: no change needed").
+
+How to edit: work on the cloned file, keep the change minimal, run the test step (the
+`#stack`, `#work` and `#proj` views must render in EN, 中文 and FR with no page errors). To upload,
+in the GitHub upload page fetch the current file from
+`https://raw.githubusercontent.com/gabriel010225/data-debrief/main/img/dd-profile.js`, apply the
+same string replacement in page JavaScript, compare its length and a checksum with the local file,
+then drop it on https://github.com/gabriel010225/data-debrief/upload/main/img (this one *must* use
+the `/img` URL) in a separate commit "Update About me: <what changed>". Do this after the note
+commit, and list the change in the report.
+
 ## 3. Test before publishing
 
 Serve the folder (`python3 -m http.server`) and open it with Playwright (Chromium is at
@@ -83,6 +115,6 @@ Pushing with git is not authorised for this repo, so upload through the browser:
 ## 5. Report
 
 Send the user a short message: which posts were imported (date + title), which were
-skipped and why, and the link to each new note. If any step failed (computer offline,
+skipped and why, the link to each new note, and what changed in About me (or "no change needed"). If any step failed (computer offline,
 Chrome extension not connected, LinkedIn logged out, GitHub upload refused), say which
 step and stop without partial publishing. The next run will pick the post up again.
